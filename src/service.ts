@@ -1,4 +1,4 @@
-import type { Invocation, Result } from "ucanto/src/client";
+import type { Invocation, Link, Result } from "ucanto/src/client";
 
 type Echo = {
   can: "intro/echo";
@@ -14,8 +14,13 @@ type Sqrt = {
 type Publish = {
   can: "name/publish";
   with: `${string}:${string}`;
-  content: string;
+  content: Link<any>;
+  origin?: Link<Publish>;
 };
+
+type PublishResponse = {
+  published: boolean
+}
 
 export const echo = async ({
   capability,
@@ -47,8 +52,12 @@ export const sqrt = async ({
   return result;
 };
 
-export const publish = async (_invocation: Invocation<Publish>) => {
-  return { ok: true as const, value: "" };
+export const publish = async (invocation: Invocation<Publish>): Promise<Result<PublishResponse, PermissionError>> => {
+  const { issuer, capability } = invocation;
+  if (issuer.did().toString() !== capability.with) {
+    return new PermissionError();
+  }
+  return { ok: true, value: { published:  true } }
 };
 
 // heirarchical mapping of (cap)abilities with corresponding handlers
@@ -64,4 +73,8 @@ export class InvalidInputError extends Error {
   constructor(public input: string) {
     super(`"intro/echo" capability expects \`with\``);
   }
+}
+
+export class PermissionError extends Error {
+  public name = 'PermissionError';
 }
