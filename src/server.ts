@@ -1,6 +1,6 @@
 import * as Server from "ucanto/src/server.js";
 import * as Transport from "ucanto/src/transport.js";
-import { service } from "./service";
+import { service } from "./service.js";
 
 export const server = Server.create({
   service,
