@@ -49,7 +49,7 @@ export const service = {
   math: { sqrt },
 };
 
-class InvalidInputError extends Error {
+export class InvalidInputError extends Error {
   constructor(public input: string) {
     super(`"intro/echo" capability expects \`with\``);
   }
