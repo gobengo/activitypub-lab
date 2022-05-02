@@ -1,4 +1,5 @@
+import { main } from "./server";
 
-export function sayHelloWorld(world: string) {
-  return `Hello ${world}`;
+if (require.main === module) {
+  main();
 }
