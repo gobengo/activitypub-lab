@@ -11,6 +11,12 @@ type Sqrt = {
   n: number;
 };
 
+type Publish = {
+  can: "name/publish";
+  with: `${string}:${string}`;
+  content: string;
+};
+
 export const echo = async ({
   capability,
 }: Invocation<Echo>): Promise<Result<string, InvalidInputError>> => {
@@ -41,12 +47,17 @@ export const sqrt = async ({
   return result;
 };
 
+export const publish = async (_invocation: Invocation<Publish>) => {
+  return { ok: true as const, value: "" };
+};
+
 // heirarchical mapping of (cap)abilities with corresponding handlers
 // 'intro/echo' -> .intro.echo
 // 'math/sqrt' -> .math.sqrt
 export const service = {
   intro: { echo },
   math: { sqrt },
+  name: { publish },
 };
 
 export class InvalidInputError extends Error {

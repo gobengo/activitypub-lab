@@ -1,41 +1,32 @@
-import { equal } from "assert";
+import * as assert from "assert";
 import { describe, it } from "mocha";
-import * as Client from "ucanto/src/client.js";
-import * as Transport from "ucanto/src/transport.js";
-import { server } from "./server.js";
 import { KeyPair } from "ucan-storage/keypair";
+import { Client } from "ucanto/src/lib.js";
+import { service } from "./service.js";
+import { createIssuer } from './issuer.js';
 
-describe("server", () => {
-  it("should be able to execute a test", () => {
-    equal(true, true);
+describe("name", () => {
+  it("exists", async () => {
+    assert.ok(typeof service.name != 'undefined')
   });
-  it("can be invoked by ucanto Client", async () => {
-    const alice = createSigner(await KeyPair.create());
-    const bob = createSigner(await KeyPair.create());
-    const connection = Client.connect({
-      encoder: Transport.CAR, // encode as CAR because server decods from car
-      decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
-      channel: server, // simply pass the server
-    });
-    const echoA = Client.invoke({
+
+  it("name/publish is an async function that takes a Publish message", async () => {
+    assert.ok(typeof service.name.publish === 'function')
+    const alice = createIssuer(await KeyPair.create());
+    const bob = createIssuer(await KeyPair.create());
+
+    const invocation = Client.invoke({
       issuer: alice,
       audience: bob,
       capability: {
-        can: "intro/echo",
-        with: `data:text/plain,foo`,
+        can: "name/publish",
+        with: "foo:bar",
+        content: "it's-a-link"
       },
-    });
-    const response = await echoA.execute(connection);
-    console.log('response', response)
-    equal(response.ok, true);
-    if (response.ok) {
-      equal(response.value, "foo");
-    }
-  });
-});
+    }) 
 
-function createSigner(keypair: KeyPair): Client.Issuer<number> {
-  return Object.assign(keypair, {
-    algorithm: 0xed as const,
-  }) as Client.Issuer<number>;
-}
+    const p = service.name.publish(invocation)
+    assert.ok(p instanceof Promise)
+    
+  })
+});
