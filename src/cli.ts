@@ -3,7 +3,6 @@ import Conf from "conf"
 import { KeyPair } from "ucan-storage/keypair"
 import ora from "ora"
 import { sha256 } from "multiformats/hashes/sha2"
-import { CID } from "multiformats/cid"
 import * as UCAN from "@ipld/dag-ucan"
 
 const NAME = "web3-name"
@@ -51,8 +50,6 @@ const main = async (options: Options) => {
   const { view } = context
 
   view.start("🔬 Look for good cid code")
-  let code = 0x787f
-  let old = new Set()
 }
 
 const identify = async (options: Options) => {

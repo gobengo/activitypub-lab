@@ -15,6 +15,7 @@
 		"strictFunctionTypes": true,
 		"strictNullChecks": true,
 		"strictPropertyInitialization": true,
+		"skipLibCheck": true,
 
 		"forceConsistentCasingInFileNames": true,
 		"noImplicitAny": true,
