@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "multiformats": "^9.6.4",
-    "@ipld/dag-ucan": "^1.2.3-beta",
+    "@ipld/dag-ucan": "1.2.3-beta",
     "ucan-storage": "^1.2.0",
     "ucanto": "^0.0.2-beta"
   },
