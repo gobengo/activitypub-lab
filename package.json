@@ -23,7 +23,7 @@
     "@web-std/fetch": "^4.1.0",
     "multiformats": "^9.6.4",
     "ucan-storage": "^1.2.0",
-    "ucanto": "web3-storage/ucanto#fix/exports"
+    "ucanto": "v0.0.3-beta"
   },
   "files": [
     "./bin/*",
