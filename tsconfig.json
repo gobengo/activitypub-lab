@@ -34,5 +34,6 @@
 	"include": [
 		"typings/**/*",
 		"src/**/*"
-	]
+	],
+	"exclude": ["node_modules"]
 }
