@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "mocha",
-    "build": "tsc --declaration",
+    "tsc": "tsc --declaration",
+    "build": "run-s lint tsc",
     "prettier": "prettier 'src/**/*.ts'",
     "lint": "npm run prettier -- -c",
     "lint:fix": "npm run prettier -- -w",
@@ -39,6 +40,7 @@
     "@web-std/fetch": "^4.1.0",
     "conf": "^10.1.2",
     "mocha": "^10.0.0",
+    "npm-run-all": "^4.1.5",
     "ora": "^6.1.0",
     "prettier": "^2.6.2",
     "subprogram": "^1.2.0",
