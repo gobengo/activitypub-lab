@@ -5,6 +5,8 @@ export class NotFoundError extends Error {
 }
 
 export class InvalidInputError extends Error {
+  public name = "InvalidInputError";
+
   constructor(public input: string) {
     super(`invalid input: ${input}`);
   }
@@ -12,7 +14,7 @@ export class InvalidInputError extends Error {
 
 type DIDString = `${string}:${string}`;
 
-// Type narrowing function
+// Type narrowing function for DID strings
 function isDIDString(s: string): s is `${string}:${string}` {
   return s.match(/^did:.*/) != null;
 }
