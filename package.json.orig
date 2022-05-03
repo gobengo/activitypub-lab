@@ -19,8 +19,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@ipld/dag-ucan": "^1.2.4-beta",
+<<<<<<< Updated upstream
+    "@ipld/dag-ucan": "^1.2.3-beta",
     "it-all": "^1.0.6",
+=======
+    "@ipld/dag-ucan": "^1.2.4-beta",
+    "@web-std/fetch": "^4.1.0",
+>>>>>>> Stashed changes
     "multiformats": "^9.6.4",
     "ucan-storage": "^1.2.0",
     "ucanto": "0.1.0-beta",

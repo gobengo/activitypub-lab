@@ -1,0 +1,139 @@
+<<<<<<< Updated upstream
+import type { Invocation, Link, Result } from "ucanto/src/client";
+import type { StorageBackend } from './storage.js';
+import { NotFoundError, InvalidInputError, InMemoryStorage } from "./storage.js";
+
+export type Publish = {
+  can: "name/publish";
+  with: `${string}:${string}`;
+  content: Link<any>;
+  origin?: Link<Publish>;
+};
+
+type PublishResponse = {
+  published: boolean;
+};
+
+type Resolve = {
+  can: "name/resolve";
+  with: `${string}:${string}`;
+};
+
+const publish = (storage: StorageBackend) => { 
+  return async (
+    invocation: Invocation<Publish>
+  ): Promise<Result<PublishResponse, PermissionError|InvalidInputError>> => {
+    const { issuer, capability } = invocation;
+    if (issuer.did().toString() !== capability.with) {
+      return new PermissionError();
+    }
+    const name = capability.with;
+    const referent = capability.content;
+    // @todo should it keep track of { origin } ?
+    try {
+      const published = await storage.publish(name, referent, capability.origin);
+      return { ok: true, value: { published } };
+    } catch (err) {
+      if (err instanceof PermissionError
+        || err instanceof InvalidInputError) {
+          return err
+      }
+      throw err;
+    }
+  }
+};
+
+const resolve = (storage: StorageBackend) => {
+    return async (
+        _invocation: Invocation<Resolve>
+    ): Promise<Result<Publish, NotFoundError>> => {
+        const name = _invocation.capability.with;
+        try {
+          const value = await storage.resolve(name);
+          return { ok: true, value };
+        } catch (err) {
+          if (err instanceof NotFoundError) {
+            return err;
+          }
+          throw err;
+        }
+    };
+};
+=======
+import type { Invocation, Result } from "ucanto/src/client"
+import * as DID from "@ipld/dag-ucan/src/did"
+
+export const id = DID.parse(
+  "did:key:z6MknjRbVGkfWK1x5gyJZb6D4LjMj1EsitFzcSccS3sAaviQ"
+)
+
+type Echo = {
+  can: "intro/echo"
+  with: `${string}:${string}`
+}
+
+type Sqrt = {
+  can: "intro/echo"
+  with: `${string}:${string}`
+  n: number
+}
+
+export const echo = async ({
+  capability,
+}: Invocation<Echo>): Promise<Result<string, InvalidInputError>> => {
+  const result = !capability.with.startsWith("data:")
+    ? new InvalidInputError(
+        `Capability "intro/echo" expects with to be a data URL, instead got ${capability.with}`
+      )
+    : !capability.with.startsWith("data:text/plain,")
+    ? new InvalidInputError(
+        `Capability "intro/echo" currently only support data URLs in text/plain encoding`
+      )
+    : {
+        ok: true as const,
+        value: capability.with.slice("data:text/plain,".length),
+      }
+  return result
+}
+
+export const sqrt = async ({
+  capability,
+}: Invocation<Sqrt>): Promise<Result<number, InvalidInputError>> => {
+  const result =
+    capability.n < 0
+      ? new InvalidInputError(
+          `Capability "math/sqrt" only operates on positive numbers, instead got ${capability.can}`
+        )
+      : { ok: true as const, value: Math.sqrt(capability.n) }
+  return result
+}
+>>>>>>> Stashed changes
+
+// heirarchical mapping of (cap)abilities with corresponding handlers
+// 'intro/echo' -> .intro.echo
+// 'math/sqrt' -> .math.sqrt
+<<<<<<< Updated upstream
+export const service = NewService();
+
+export function NewService(storage: StorageBackend = InMemoryStorage()) {
+  return {
+    name: { 
+      publish: publish(storage), 
+      resolve: resolve(storage),
+    },
+=======
+export const service = {
+  intro: { echo },
+  math: { sqrt },
+}
+
+export class InvalidInputError extends Error {
+  constructor(public input: string) {
+    super(`"intro/echo" capability expects \`with\``)
+>>>>>>> Stashed changes
+  }
+}
+
+export class PermissionError extends Error {
+  public name = "PermissionError";
+}
