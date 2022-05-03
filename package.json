@@ -7,7 +7,9 @@
   "scripts": {
     "test": "mocha",
     "build": "tsc --declaration",
-    "lint": "tslint -c tslint.json src/**/*.ts",
+    "prettier": "prettier 'src/**/*.ts'",
+    "lint": "npm run prettier -- -c",
+    "lint:fix": "npm run prettier -- -w",
     "prepublish": "npm run build",
     "start": "npx ts-node src"
   },
@@ -20,11 +22,11 @@
   "license": "ISC",
   "dependencies": {
     "@ipld/dag-ucan": "^1.2.4-beta",
+    "@noble/ed25519": "^1.6.0",
     "it-all": "^1.0.6",
     "multiformats": "^9.6.4",
     "ucanto": "0.1.0-beta",
-    "uint8arrays": "^3.0.0",
-    "@noble/ed25519": "^1.6.0"
+    "uint8arrays": "^3.0.0"
   },
   "files": [
     "./bin/*",
@@ -38,6 +40,7 @@
     "conf": "^10.1.2",
     "mocha": "^10.0.0",
     "ora": "^6.1.0",
+    "prettier": "^2.6.2",
     "subprogram": "^1.2.0",
     "ts-node": "^10.7.0",
     "tslint": "^6.1.3",
