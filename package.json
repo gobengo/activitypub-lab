@@ -22,9 +22,9 @@
     "@ipld/dag-ucan": "^1.2.4-beta",
     "it-all": "^1.0.6",
     "multiformats": "^9.6.4",
-    "ucan-storage": "^1.2.0",
     "ucanto": "0.1.0-beta",
-    "uint8arrays": "^3.0.0"
+    "uint8arrays": "^3.0.0",
+    "@noble/ed25519": "^1.6.0"
   },
   "files": [
     "./bin/*",
