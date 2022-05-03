@@ -1,4 +1,5 @@
 import type { Invocation, Link, Result } from "ucanto/src/client";
+import { NotFoundError } from "./storage.js";
 
 type Echo = {
   can: "intro/echo";
@@ -19,8 +20,8 @@ type Publish = {
 };
 
 type PublishResponse = {
-  published: boolean
-}
+  published: boolean;
+};
 
 type Resolve = {
   can: "name/resolve";
@@ -57,6 +58,9 @@ export const sqrt = async ({
   return result;
 };
 
+// @todo: don't use module scope for state
+const storage: Record<`${string}:${string}`, Link<any>> = {};
+
 export const publish = async (
   invocation: Invocation<Publish>
 ): Promise<Result<PublishResponse, PermissionError>> => {
@@ -64,12 +68,28 @@ export const publish = async (
   if (issuer.did().toString() !== capability.with) {
     return new PermissionError();
   }
+  const name = capability.with;
+  const referent = capability.content;
+  // @todo should it keep track of { origin } ?
+  storage[name] = referent;
   return { ok: true, value: { published: true } };
 };
 
 export const resolve = async (
   _invocation: Invocation<Resolve>
 ): Promise<Result<Publish, NotFoundError>> => {
+  const name = _invocation.capability.with;
+  if (name in storage) {
+    return {
+      ok: true,
+      value: {
+        can: "name/publish",
+        with: name,
+        content: storage[name],
+        // @todo it should probably have an origin
+      },
+    };
+  }
   return new NotFoundError();
 };
 
@@ -89,9 +109,6 @@ export class InvalidInputError extends Error {
 }
 
 export class PermissionError extends Error {
-  public name = 'PermissionError';
+  public name = "PermissionError";
 }
 
-export class NotFoundError extends Error {
-  public name = "NotFoundError";
-}

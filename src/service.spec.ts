@@ -121,7 +121,6 @@ describe("name", () => {
       capability: {
         can: "name/resolve",
         with: alice.did(),
-        content: ZERO_CID,
       },
     });
     const resolveResponse = await service.name.resolve(resolveUnsetInvocation);
@@ -129,4 +128,38 @@ describe("name", () => {
     assert.equal(resolveResponse.name, "NotFoundError");
   });
   
+  it("can resolve id after publishing it", async () => {
+    // set did
+    const alice = createIssuer(await KeyPair.create());
+    const aliceCid1 = ZERO_CID;
+    // publish did1 -> cid1
+    const publish = Client.invoke({
+      issuer: alice,
+      audience: alice,
+      capability: {
+        can: "name/publish",
+        with: alice.did(),
+        content: aliceCid1,
+      },
+    });
+    const publishResponse = await service.name.publish(publish);
+    assert.ok(publishResponse.ok);
+    // resolve did1
+    const resolve = Client.invoke({
+      issuer: alice,
+      audience: alice,
+      capability: {
+        can: "name/resolve",
+        with: alice.did(),
+      },
+    });
+    const resolveResponse = await service.name.resolve(resolve);
+    console.log({ resolveResponse });
+    assert.ok(resolveResponse.ok);
+    assert.equal(
+      resolveResponse.value.content.toString(),
+      aliceCid1.toString()
+    );
+    // assert resolve result is cid1
+  });
 });
