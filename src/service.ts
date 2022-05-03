@@ -1,5 +1,5 @@
 import type { Invocation, Link, Result } from "ucanto/src/client";
-import type { StorageBackend } from "./storage.js";
+import type { StorageBackend, Publish } from "./storage.js";
 import type { Audience } from "./actor/api.js";
 import { parse as parseAudience } from "./actor/audience.js";
 import {
@@ -8,12 +8,6 @@ import {
   InMemoryStorage,
 } from "./storage.js";
 
-export type Publish = {
-  can: "name/publish";
-  with: `${string}:${string}`;
-  content: Link<any>;
-  origin?: Link<Publish>;
-};
 
 type PublishResponse = {
   published: boolean;
@@ -39,7 +33,7 @@ const publish = ({ storage }: Context) => {
       const published = await storage.publish(
         name,
         referent,
-        capability.origin
+        capability.origin || null
       );
       return { ok: true, value: { published } };
     } catch (err) {
@@ -63,7 +57,8 @@ const resolve = ({ storage }: Context) => {
       if (err instanceof NotFoundError) {
         return err;
       }
-      throw err;
+
+      return new Error(`unknown error: ${String(err)}`);
     }
   };
 };

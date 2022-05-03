@@ -6,14 +6,9 @@ import * as Transport from "ucanto/src/transport.js";
 import * as HTTP from "ucanto/src/transport/http.js";
 import * as Client from "ucanto/src/client.js";
 import * as Issuer from "./actor/issuer.js";
-import polyfillFetch from "@web-std/fetch";
 import { ucantoHttpRequestListener } from "./ucanto-node-http.js";
 import { withHttpServer } from "./http.js";
-
-// in node <17.5.0, globalThis.fetch is not defined, so use polyfill
-// https://nodejs.org/api/globals.html#fetch
-const fetch =
-  typeof globalThis.fetch !== "undefined" ? globalThis.fetch : polyfillFetch;
+import { universalFetch } from "./fetch.js";
 
 describe("http name server", () => {
   it("can be invoked via Client with HTTP transport", async () => {
@@ -30,7 +25,7 @@ describe("http name server", () => {
           encoder: Transport.CAR, // encode as CAR because server decodes from car
           decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
           /** @type {Transport.Channel<typeof service>} */
-          channel: HTTP.open<typeof service>({ fetch, url }), // simple `fetch` wrapper
+          channel: HTTP.open<typeof service>({ fetch: universalFetch, url }), // simple `fetch` wrapper
         });
         const publish = Client.invoke({
           issuer: alice,

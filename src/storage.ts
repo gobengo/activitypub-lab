@@ -19,18 +19,20 @@ function isDIDString(s: string): s is `${string}:${string}` {
   return s.match(/^did:.*/) != null;
 }
 
-type Publish = {
+export type Publish = {
   can: "name/publish";
-  with: DIDString;
+  with: `${string}:${string}`;
   content: Link<any>;
-  origin?: Link<Publish>;
+  // @todo this should be undefined-able, but doing so led to dag-cbor encoding error
+  origin: null | Link<Publish>;
 };
+
 
 export interface StorageBackend {
   publish(
     did: string,
     content: Link<any>,
-    origin?: Link<Publish>
+    origin: Link<Publish> | null
   ): Promise<boolean>;
 
   resolve(did: string): Promise<Publish>;
@@ -43,7 +45,7 @@ export function InMemoryStorage(
     async publish(
       did: string,
       content: Link<any>,
-      origin?: Link<Publish, 0 | 1, number, number>
+      origin: Link<Publish, 0 | 1, number, number> | null
     ): Promise<boolean> {
       if (!isDIDString(did)) {
         throw new InvalidInputError("invalid did string: " + did);

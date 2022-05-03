@@ -7,7 +7,6 @@ import * as Audience from "./actor/audience.js";
 import { CID } from "multiformats";
 import { ZERO_CID } from "./cid.js";
 
-// https://cid.ipfs.io/#bafkqaaa
 const bob = Audience.parse(
   "did:key:z6MkffDZCkCTWreg8868fG1FGFogcJj5X6PY93pPcWDn9bob"
 );
@@ -30,6 +29,7 @@ describe("name", () => {
         content: CID.parse(
           "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
         ),
+        origin: null,
       },
     });
 
@@ -57,6 +57,7 @@ describe("name", () => {
         content: CID.parse(
           "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
         ),
+        origin: null,
       },
     });
 
@@ -98,6 +99,7 @@ describe("name", () => {
         content: CID.parse(
           "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
         ),
+        origin: null,
       },
       proofs: [delegation],
     });
@@ -136,6 +138,7 @@ describe("name", () => {
         can: "name/publish",
         with: alice.did(),
         content: aliceCid1,
+        origin: null,
       },
     });
     const publishResponse = await service.name.publish(publish);

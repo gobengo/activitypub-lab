@@ -1,12 +1,13 @@
 import { RequestListener } from "http";
-import { ZERO_CID } from "./cid";
-import { withHttpServer } from "./http";
+import { ZERO_CID } from "./cid.js";
+import { withHttpServer } from "./http.js";
 import * as assert from "assert";
-import { NewService } from "./service";
+import { NewService, service } from "./service.js";
 import * as Server from "ucanto/src/server.js";
 import * as Transport from "ucanto/src/transport.js";
 import * as Client from "ucanto/src/client.js";
 import * as Issuer from "./actor/issuer.js";
+import { universalFetch } from "./fetch.js";
 
 export async function simpleDemo() {
   // create actors = {alice}
@@ -17,19 +18,23 @@ export async function simpleDemo() {
   const httpGateway = HttpGateway();
   // boot up control plane
   const connection = createNameServerDemoConnection();
+  console.log("about to use httpGateway");
   await withHttpServer(httpGateway, async (baseUrl) => {
     const index = new URL("/", baseUrl).toString();
     // fetch http gateway for aliceDid and expect http 404 response
-    const resp1 = await fetch(index);
+    console.log("fetching");
+    const resp1 = await universalFetch(index);
+    console.log("index fetch response ", resp1);
     assert.equal(resp1.status, 404);
     // alice publishes mapping aliceDid -> aliceCid1
     const alicePublish1 = Client.invoke({
       issuer: alice,
-      audience: alice,
+      audience: service,
       capability: {
         can: "name/publish",
         with: alice.did(),
         content: aliceCid1,
+        origin: null,
       },
     });
     const alicePublish1Response = await alicePublish1.execute(connection);
@@ -37,7 +42,7 @@ export async function simpleDemo() {
     // alice resolves her aliceDid and expects aliceCid1
     const aliceResolve1 = Client.invoke({
       issuer: alice,
-      audience: alice,
+      audience: service,
       capability: {
         can: "name/resolve",
         with: alice.did(),
@@ -45,15 +50,24 @@ export async function simpleDemo() {
     });
     const aliceResolve1Response = await aliceResolve1.execute(connection);
     assert.ok(aliceResolve1Response.ok);
-    assert.equal(aliceResolve1Response.value.content, aliceCid1);
+    assert.equal(
+      aliceResolve1Response.value.content.toString(),
+      aliceCid1.toString()
+    );
 
     // alice fetches from http gateway and expects http response body of aliceCid1
+    const fetchFromGatewayResponse = await universalFetch(
+      new URL(`/dids/${alice.did().toString()}`, baseUrl).toString()
+    );
+    // assert.equal(fetchFromGatewayResponse.status, 200);
+    ("foo");
   });
 }
 
 function createNameServerDemoConnection() {
+  const service = NewService();
   const server = Server.create({
-    service: NewService(),
+    service,
     decoder: Transport.CAR,
     encoder: Transport.CBOR,
   });
@@ -83,5 +97,8 @@ export function writeDelegationDemo() {
 }
 
 function HttpGateway(): RequestListener {
-  return (_req, _res) => {};
+  return (_req, res) => {
+    res.writeHead(404);
+    res.end();
+  };
 }
