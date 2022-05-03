@@ -18,6 +18,6 @@ interface Resolve {
 
 interface NameService {
   publish(request:Invocation<Publish>):Promise<Result<Link<Publish>>, PermissionError|OriginError>>
-  resolve(request:Invocation<Resolve>):Promise<Result<Publish, PermissionError>>
+  resolve(request:Invocation<Resolve>):Promise<Result<Publish, PermissionError|NotFoundError>>
 }
 ```

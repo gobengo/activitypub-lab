@@ -6,9 +6,6 @@ import { server } from "./server.js";
 import { KeyPair } from "ucan-storage/keypair";
 
 describe("server", () => {
-  it("should be able to execute a test", () => {
-    assert.equal(true, true);
-  });
   it("can be invoked by ucanto Client", async () => {
     const alice = createSigner(await KeyPair.create());
     const bob = createSigner(await KeyPair.create());
@@ -26,7 +23,6 @@ describe("server", () => {
       },
     });
     const response = await echoA.execute(connection);
-    console.log("response", response);
     assert.equal(response.ok, true);
     if (response.ok) {
       assert.equal(response.value, "foo");

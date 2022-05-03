@@ -6,6 +6,9 @@ import { service } from "./service.js";
 import { createIssuer } from './issuer.js';
 import { CID } from "multiformats";
 
+// https://cid.ipfs.io/#bafkqaaa
+const ZERO_CID = CID.parse("bafkqaaa");
+
 describe("name", () => {
   it("exists", async () => {
     assert.ok(typeof service.name != 'undefined')
@@ -33,7 +36,6 @@ describe("name", () => {
     const p = service.name.publish(invocation)
     assert.ok(p instanceof Promise)
     const resp = await p;
-    console.log('expect permissionError', resp)
     assert.ok(!resp.ok);
     if ( ! (resp instanceof Error)) {
       throw new Error('expected resp to be Error')
@@ -110,4 +112,21 @@ describe("name", () => {
     assert.ok(resp.ok);
     assert.ok(resp.value.published);
   });
+
+  it("it errors with NotFoundError if try to resolve unset id", async () => {
+    const alice = createIssuer(await KeyPair.create());
+    const resolveUnsetInvocation = Client.invoke({
+      issuer: alice,
+      audience: alice,
+      capability: {
+        can: "name/resolve",
+        with: alice.did(),
+        content: ZERO_CID,
+      },
+    });
+    const resolveResponse = await service.name.resolve(resolveUnsetInvocation);
+    assert.ok(!resolveResponse.ok);
+    assert.equal(resolveResponse.name, "NotFoundError");
+  });
+  
 });

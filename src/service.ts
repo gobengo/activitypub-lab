@@ -22,6 +22,11 @@ type PublishResponse = {
   published: boolean
 }
 
+type Resolve = {
+  can: "name/resolve";
+  with: `${string}:${string}`;
+};
+
 export const echo = async ({
   capability,
 }: Invocation<Echo>): Promise<Result<string, InvalidInputError>> => {
@@ -52,12 +57,20 @@ export const sqrt = async ({
   return result;
 };
 
-export const publish = async (invocation: Invocation<Publish>): Promise<Result<PublishResponse, PermissionError>> => {
+export const publish = async (
+  invocation: Invocation<Publish>
+): Promise<Result<PublishResponse, PermissionError>> => {
   const { issuer, capability } = invocation;
   if (issuer.did().toString() !== capability.with) {
     return new PermissionError();
   }
-  return { ok: true, value: { published:  true } }
+  return { ok: true, value: { published: true } };
+};
+
+export const resolve = async (
+  _invocation: Invocation<Resolve>
+): Promise<Result<Publish, NotFoundError>> => {
+  return new NotFoundError();
 };
 
 // heirarchical mapping of (cap)abilities with corresponding handlers
@@ -66,7 +79,7 @@ export const publish = async (invocation: Invocation<Publish>): Promise<Result<P
 export const service = {
   intro: { echo },
   math: { sqrt },
-  name: { publish },
+  name: { publish, resolve },
 };
 
 export class InvalidInputError extends Error {
@@ -77,4 +90,8 @@ export class InvalidInputError extends Error {
 
 export class PermissionError extends Error {
   public name = 'PermissionError';
+}
+
+export class NotFoundError extends Error {
+  public name = "NotFoundError";
 }
