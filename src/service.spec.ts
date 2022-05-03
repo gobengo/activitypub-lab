@@ -113,6 +113,30 @@ describe("name", () => {
     assert.ok(resp.value.published);
   });
 
+  it("name/publish errors with InvalidInputError when publishing an invalid did", async () => {
+    const alice = createIssuer(await KeyPair.create());
+
+    const pubInvocation = Client.invoke({
+      issuer: alice,
+      audience: alice,
+      capability: {
+        can: "name/publish",
+        // @ts-expect-error
+        with: "not-a-did",
+        content: CID.parse(
+          "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
+        ),
+      },
+    });
+
+    try {
+      // @ts-expect-error
+      service.name.publish(pubInvocation);
+    } catch (err) {
+      assert.ok(err);
+    }
+  });
+
   it("it errors with NotFoundError if try to resolve unset id", async () => {
     const alice = createIssuer(await KeyPair.create());
     const resolveUnsetInvocation = Client.invoke({

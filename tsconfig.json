@@ -22,7 +22,7 @@
 		"noImplicitReturns": true,
 		"noImplicitThis": true,
 		"noFallthroughCasesInSwitch": true,
-		"noUnusedLocals": true,
+		"noUnusedLocals": false,
 		"noUnusedParameters": true,
 
 		"emitDecoratorMetadata": true,

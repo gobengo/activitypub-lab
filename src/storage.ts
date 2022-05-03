@@ -4,14 +4,27 @@ export class NotFoundError extends Error {
   public name = "NotFoundError";
 }
 
+export class InvalidInputError extends Error {
+  constructor(public input: string) {
+    super(`invalid input: ${input}`);
+  }
+}
+
+type DIDString = `${string}:${string}`;
+
+// Type narrowing function
+function isDIDString(s: string): s is `${string}:${string}` {
+  return s.match(/^did:.*/) != null;
+}
+
 type Publish = {
   can: "name/publish";
-  with: `${string}:${string}`;
+  with: DIDString;
   content: Link<any>;
   origin?: Link<Publish>;
 };
 
-interface StorageBackend {
+export interface StorageBackend {
   publish(
     did: string,
     content: Link<any>,
@@ -30,9 +43,13 @@ export function InMemoryStorage(
       content: Link<any>,
       origin?: Link<Publish, 0 | 1, number, number>
     ): Promise<boolean> {
+      if (!isDIDString(did)) {
+        throw new InvalidInputError("invalid did string: " + did);
+      }
+
       m.set(did, {
         can: "name/publish",
-        with: did as `${string}:${string}`,
+        with: did,
         content,
         origin,
       });

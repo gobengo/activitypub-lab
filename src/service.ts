@@ -1,5 +1,6 @@
 import type { Invocation, Link, Result } from "ucanto/src/client";
-import { NotFoundError } from "./storage.js";
+import type { StorageBackend } from './storage.js';
+import { NotFoundError, InvalidInputError, InMemoryStorage } from "./storage.js";
 
 type Echo = {
   can: "intro/echo";
@@ -59,54 +60,64 @@ export const sqrt = async ({
 };
 
 // @todo: don't use module scope for state
-const storage: Record<`${string}:${string}`, Link<any>> = {};
+const storage: StorageBackend = InMemoryStorage()
 
-export const publish = async (
-  invocation: Invocation<Publish>
-): Promise<Result<PublishResponse, PermissionError>> => {
-  const { issuer, capability } = invocation;
-  if (issuer.did().toString() !== capability.with) {
-    return new PermissionError();
+export const publish = (storage: StorageBackend) => { 
+  return async (
+    invocation: Invocation<Publish>
+  ): Promise<Result<PublishResponse, PermissionError|InvalidInputError>> => {
+    const { issuer, capability } = invocation;
+    if (issuer.did().toString() !== capability.with) {
+      return new PermissionError();
+    }
+    const name = capability.with;
+    const referent = capability.content;
+    // @todo should it keep track of { origin } ?
+    try {
+      const published = await storage.publish(name, referent, capability.origin);
+      return { ok: true, value: { published } };
+    } catch (err) {
+      if (err instanceof PermissionError
+        || err instanceof InvalidInputError) {
+          return err
+      }
+      // TODO: make a catch-all error type
+      throw new Error(`unexpected error: ${err}`)
+    }
   }
-  const name = capability.with;
-  const referent = capability.content;
-  // @todo should it keep track of { origin } ?
-  storage[name] = referent;
-  return { ok: true, value: { published: true } };
 };
 
-export const resolve = async (
-  _invocation: Invocation<Resolve>
-): Promise<Result<Publish, NotFoundError>> => {
-  const name = _invocation.capability.with;
-  if (name in storage) {
-    return {
-      ok: true,
-      value: {
-        can: "name/publish",
-        with: name,
-        content: storage[name],
-        // @todo it should probably have an origin
-      },
+export const resolve = (storage: StorageBackend) => {
+    return async (
+        _invocation: Invocation<Resolve>
+    ): Promise<Result<Publish, NotFoundError>> => {
+        const name = _invocation.capability.with;
+        try {
+          const value = await storage.resolve(name);
+          return { ok: true, value };
+        } catch (err) {
+          if (err instanceof NotFoundError) {
+            return err;
+          }
+          // TODO: make a catch-all error type
+          throw new Error(`unexpected error: ${err}`)
+        }
     };
-  }
-  return new NotFoundError();
 };
 
 // heirarchical mapping of (cap)abilities with corresponding handlers
 // 'intro/echo' -> .intro.echo
 // 'math/sqrt' -> .math.sqrt
 export const service = {
-  intro: { echo },
-  math: { sqrt },
-  name: { publish, resolve },
+  name: { 
+    publish: publish(storage), 
+    resolve: resolve(storage) 
+  },
 };
 
-export class InvalidInputError extends Error {
-  constructor(public input: string) {
-    super(`"intro/echo" capability expects \`with\``);
-  }
-}
+// export const NewService(storage: StorageBackend = InMemoryStorage()) {
+
+// }
 
 export class PermissionError extends Error {
   public name = "PermissionError";

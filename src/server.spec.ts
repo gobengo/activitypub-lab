@@ -2,36 +2,36 @@ import * as assert from "assert";
 import { describe, it } from "mocha";
 import * as Client from "ucanto/src/client.js";
 import * as Transport from "ucanto/src/transport.js";
-import { server } from "./server.js";
 import { KeyPair } from "ucan-storage/keypair";
-
+import { createIssuer } from "./issuer.js";
+import * as Server from "ucanto/src/server.js";
+import { service } from "./service.js";
+import { CID } from "multiformats";
 describe("server", () => {
-  it("can be invoked by ucanto Client", async () => {
-    const alice = createSigner(await KeyPair.create());
-    const bob = createSigner(await KeyPair.create());
-    const connection = Client.connect({
-      encoder: Transport.CAR, // encode as CAR because server decods from car
-      decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
-      channel: server, // simply pass the server
+  it("can be invoked via no transport", async () => {
+    const alice = createIssuer(await KeyPair.create());
+    const server = Server.create({
+      service,
+      decoder: Transport.CAR,
+      encoder: Transport.CBOR,
     });
-    const echoA = Client.invoke({
+    const connection = Client.connect({
+      encoder: Transport.CAR,
+      decoder: Transport.CBOR,
+      channel: server,
+    });
+    const publish = Client.invoke({
       issuer: alice,
-      audience: bob,
+      audience: alice,
       capability: {
-        can: "intro/echo",
-        with: `data:text/plain,foo`,
+        can: "name/publish",
+        with: alice.did(),
+        content: CID.parse(
+          "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
+        ),
       },
     });
-    const response = await echoA.execute(connection);
-    assert.equal(response.ok, true);
-    if (response.ok) {
-      assert.equal(response.value, "foo");
-    }
+    const publishResponse = await publish.execute(connection);
+    assert.ok(publishResponse.ok);
   });
 });
-
-function createSigner(keypair: KeyPair): Client.Issuer<number> {
-  return Object.assign(keypair, {
-    algorithm: 0xed as const,
-  }) as Client.Issuer<number>;
-}
