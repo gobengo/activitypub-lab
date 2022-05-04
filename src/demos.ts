@@ -15,7 +15,7 @@ export async function simpleDemo() {
   // create alice's initial content aliceCid1
   const aliceCid1 = ZERO_CID;
   // boot up the http gateway data plane
-  const httpNameResolver = HttpNameResolver();
+  const httpNameResolver = await HttpNameResolver(NewService());
   // boot up control plane
   const connection = createNameServerDemoConnection();
   await withHttpServer(httpNameResolver, async (baseUrl) => {

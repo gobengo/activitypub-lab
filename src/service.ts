@@ -7,6 +7,7 @@ import {
   InvalidInputError,
   InMemoryStorage,
 } from "./storage.js";
+import { Client } from "ucanto/src/lib";
 
 type PublishResponse = {
   published: boolean;
@@ -57,7 +58,7 @@ const resolve = ({ storage }: Context) => {
         return err;
       }
 
-      return new Error(`unknown error: ${String(err)}`);
+      throw new Error(`unknown error: ${String(err)}`);
     }
   };
 };
@@ -86,6 +87,10 @@ export function NewService({
     },
   };
 }
+
+export type IServiceAPI = ReturnType<typeof NewService>;
+
+export type IClientConnection = Client.ConnectionView<IServiceAPI>;
 
 export class PermissionError extends Error {
   public name = "PermissionError";

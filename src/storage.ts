@@ -1,7 +1,7 @@
 import { Link } from "ucanto/src/lib";
 
 export class NotFoundError extends Error {
-  public name = "NotFoundError";
+  public name = "NotFoundError" as const;
 }
 
 export class InvalidInputError extends Error {
