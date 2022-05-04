@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.3.1](https://github.com/web3-storage/ucanto-name-system/compare/v1.3.0...v1.3.1) (2022-05-04)
+
+
+### Bug Fixes
+
+* follow redirects in gateway proxy route ([04cf86e](https://github.com/web3-storage/ucanto-name-system/commit/04cf86e74fe56b68ca750024860c8adfe51a286e))
+
 ## [1.3.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.2.0...v1.3.0) (2022-05-04)
 
 
