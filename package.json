@@ -4,6 +4,7 @@
   "description": "",
   "main": "./lib/index.js",
   "type": "module",
+  "private": false,
   "scripts": {
     "test": "mocha",
     "tsc": "tsc --declaration",
