@@ -35,6 +35,7 @@ export async function HttpNameResolver(
       target: GATEWAY_HOST,
       changeOrigin: true,
       logLevel: proxyLogLevel,
+      followRedirects: true,
     })
   );
   return app;
