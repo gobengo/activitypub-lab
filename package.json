@@ -13,6 +13,7 @@
     "test": "mocha",
     "tsc": "tsc --declaration",
     "build": "run-s lint tsc",
+    "prepare": "npm run build",
     "prettier": "prettier 'src/**/*.ts'",
     "eslint": "npx eslint src --ext .js,.jsx,.ts,.tsx",
     "eslint:fix": "npm run eslint -- --fix",
