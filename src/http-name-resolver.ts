@@ -107,7 +107,7 @@ function AsyncRequestListener<P>(
       res.end(
         JSON.stringify({
           type: "UnexpectedError",
-          mssage: error.message,
+          message: error.message,
         })
       );
     });
