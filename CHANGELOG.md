@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.1.0...v1.2.0) (2022-05-04)
+
+
+### Features
+
+* read args from env vars with UCANTO_NAME_ prefix ([#7](https://github.com/web3-storage/ucanto-name-system/issues/7)) ([a0d1c2e](https://github.com/web3-storage/ucanto-name-system/commit/a0d1c2e39f053608e3b83350dcfc3d2867ccafc0))
+
 ## [1.1.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.0.0...v1.1.0) (2022-05-04)
 
 
