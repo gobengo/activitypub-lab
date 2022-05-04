@@ -1,11 +1,11 @@
 import * as assert from "assert";
 import { describe, it } from "mocha";
 import { Client } from "ucanto/src/lib.js";
-import { service } from "./service.js";
 import * as Issuer from "./actor/issuer.js";
 import * as Audience from "./actor/audience.js";
 import { CID } from "multiformats";
 import { ZERO_CID } from "./cid.js";
+import { NewService } from "./service.js";
 
 const bob = Audience.parse(
   "did:key:z6MkffDZCkCTWreg8868fG1FGFogcJj5X6PY93pPcWDn9bob"
@@ -13,10 +13,11 @@ const bob = Audience.parse(
 
 describe("name", () => {
   it("exists", async () => {
-    assert.ok(typeof service.name != "undefined");
+    assert.ok(typeof NewService().name != "undefined");
   });
 
   it("name/publish fails with PermissionError if resource DID is invalid", async () => {
+    const service = NewService();
     assert.ok(typeof service.name.publish === "function");
     const alice = await Issuer.generate();
 
@@ -44,6 +45,7 @@ describe("name", () => {
   });
 
   it("name/publish succeeds if `with` is issuer's did", async () => {
+    const service = NewService();
     assert.ok(typeof service.name.publish === "function");
     const alice = await Issuer.generate();
 
@@ -74,6 +76,7 @@ describe("name", () => {
    * not just the issuer (which is alice, not bob)
    */
   xit("name/publish succeeds when invoked by a delegate", async () => {
+    const service = NewService();
     assert.ok(typeof service.name.publish === "function");
     const alice = await Issuer.generate();
     const mallory = await Issuer.generate();
@@ -84,7 +87,7 @@ describe("name", () => {
       capabilities: [
         {
           can: "name/publish",
-          with: alice.did().toString() as `${string}:${string}`,
+          with: alice.did(),
         },
       ],
     });
@@ -107,11 +110,13 @@ describe("name", () => {
     const p = service.name.publish(invocation);
     assert.ok(p instanceof Promise);
     const resp = await p;
+    console.log({ resp });
     assert.ok(resp.ok);
     assert.ok(resp.value.published);
   });
 
   it("it errors with NotFoundError if try to resolve unset id", async () => {
+    const service = NewService();
     const alice = await Issuer.generate();
     const resolveUnsetInvocation = Client.invoke({
       issuer: alice,
@@ -127,6 +132,7 @@ describe("name", () => {
   });
 
   it("can resolve id after publishing it", async () => {
+    const service = NewService();
     // set did
     const alice = await Issuer.generate();
     const aliceCid1 = ZERO_CID;

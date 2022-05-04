@@ -1,4 +1,5 @@
 import * as nodeHttp from "http";
+import { Http2ServerRequest } from "http2";
 import type { AddressInfo } from "net";
 
 export async function withHttpServer(
@@ -25,8 +26,9 @@ export async function withHttpServer(
   return;
 }
 
-function addressUrl(addressInfo: string | AddressInfo | null): URL | null {
-  if (addressInfo === null) return null;
+export function addressUrl(addressInfo: string | AddressInfo | null): URL {
+  if (addressInfo === null)
+    throw new TypeError("addressInfo is unexpectedly null");
   if (typeof addressInfo === "string") return new URL(addressInfo);
   const { address, port } = addressInfo;
   const host = address === "::" ? "127.0.0.1" : address;

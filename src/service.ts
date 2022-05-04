@@ -63,11 +63,6 @@ const resolve = ({ storage }: Context) => {
   };
 };
 
-// heirarchical mapping of (cap)abilities with corresponding handlers
-// 'intro/echo' -> .intro.echo
-// 'math/sqrt' -> .math.sqrt
-export const service = NewService();
-
 export interface Context {
   storage: StorageBackend;
   audience: Audience;

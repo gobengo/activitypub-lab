@@ -87,13 +87,25 @@ async function GetDidResolution(nameService: INameServiceAPI) {
           throw new Error("Unexpected resolution error");
       }
     }
-    res.writeHead(200);
-    res.end(
-      JSON.stringify({
-        did,
-        cid: resolution.value.content,
-      })
-    );
+
+    const cid = resolution.value.content;
+
+    if (req.headers.accept === "application/json") {
+      res.writeHead(200);
+      res.end(
+        JSON.stringify({
+          did,
+          cid,
+        })
+      );
+      return;
+    }
+
+    res.writeHead(302, {
+      // TODO: don't hard-code gateway host
+      Location: `https://nftstorage.link/ipfs/${cid}`,
+    });
+    res.end();
   });
 }
 

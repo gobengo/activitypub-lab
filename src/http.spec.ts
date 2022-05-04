@@ -1,6 +1,5 @@
 import * as assert from "assert";
 import { describe, it } from "mocha";
-import { service } from "./service.js";
 import * as Server from "ucanto/src/server.js";
 import * as Transport from "ucanto/src/transport.js";
 import * as HTTP from "ucanto/src/transport/http.js";
@@ -9,10 +8,12 @@ import * as Issuer from "./actor/issuer.js";
 import { ucantoHttpRequestListener } from "./ucanto-node-http.js";
 import { withHttpServer } from "./http.js";
 import { universalFetch } from "./fetch.js";
+import { NewService } from "./service.js";
 
 describe("http name server", () => {
   it("can be invoked via Client with HTTP transport", async () => {
     const alice = await Issuer.generate();
+    const service = NewService();
     const server = Server.create({
       service,
       decoder: Transport.CAR,
@@ -27,7 +28,7 @@ describe("http name server", () => {
           /** @type {Transport.Channel<typeof service>} */
           channel: HTTP.open<typeof service>({ fetch: universalFetch, url }), // simple `fetch` wrapper
         });
-        const publish = Client.invoke({
+        const resolve = Client.invoke({
           issuer: alice,
           audience: alice,
           capability: {
@@ -35,7 +36,7 @@ describe("http name server", () => {
             with: alice.did(),
           },
         });
-        await publish.execute(connection);
+        await resolve.execute(connection);
       }
     );
   });

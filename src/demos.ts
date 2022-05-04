@@ -1,7 +1,7 @@
 import { ZERO_CID } from "./cid.js";
 import { withHttpServer } from "./http.js";
 import * as assert from "assert";
-import { NewService, service } from "./service.js";
+import { NewService } from "./service.js";
 import * as Server from "ucanto/src/server.js";
 import * as Transport from "ucanto/src/transport.js";
 import * as Client from "ucanto/src/client.js";
@@ -14,8 +14,9 @@ export async function simpleDemo() {
   const alice = await Issuer.generate();
   // create alice's initial content aliceCid1
   const aliceCid1 = ZERO_CID;
+  const nameService = NewService();
   // boot up the http gateway data plane
-  const httpNameResolver = await HttpNameResolver(NewService());
+  const httpNameResolver = await HttpNameResolver(nameService);
   // boot up control plane
   const connection = createNameServerDemoConnection();
   await withHttpServer(httpNameResolver, async (baseUrl) => {
@@ -27,7 +28,7 @@ export async function simpleDemo() {
     // alice publishes mapping aliceDid -> aliceCid1
     const alicePublish1 = Client.invoke({
       issuer: alice,
-      audience: service,
+      audience: nameService,
       capability: {
         can: "name/publish",
         with: alice.did(),
@@ -40,7 +41,7 @@ export async function simpleDemo() {
     // alice resolves her aliceDid and expects aliceCid1
     const aliceResolve1 = Client.invoke({
       issuer: alice,
-      audience: service,
+      audience: nameService,
       capability: {
         can: "name/resolve",
         with: alice.did(),

@@ -4,39 +4,120 @@ import * as Client from "ucanto/src/client.js";
 import * as Transport from "ucanto/src/transport.js";
 import * as Issuer from "./actor/issuer.js";
 import * as Server from "ucanto/src/server.js";
-import { service } from "./service.js";
 import { CID } from "multiformats";
 import * as Audience from "./actor/audience.js";
+import * as NameServer from "./server.js";
+import { HttpNameResolverUrls } from "./http-name-resolver.js";
+import { universalFetch } from "./fetch.js";
+import * as HTTP from "ucanto/src/transport/http.js";
+import { IServiceAPI, NewService } from "./service.js";
+import { ZERO_CID } from "./cid.js";
 
 describe("server", () => {
-  it("can be invoked via no transport", async () => {
+  it('can be started and get urls"', async () => {
+    const { stop, urls } = await NameServer.start();
+    try {
+      assert.ok(urls.control);
+      assert.ok(urls.data);
+    } finally {
+      await stop();
+    }
+  });
+  it("can invoke control plane via ucanto Client HTTP transport", async () => {
     const alice = await Issuer.generate();
-    const bob = Audience.parse(
-      "did:key:z6MkffDZCkCTWreg8868fG1FGFogcJj5X6PY93pPcWDn9bob"
-    );
-    const server = Server.create({
-      service,
-      decoder: Transport.CAR,
-      encoder: Transport.CBOR,
-    });
-    const connection = Client.connect({
-      encoder: Transport.CAR,
-      decoder: Transport.CBOR,
-      channel: server,
-    });
-    const publish = Client.invoke({
-      issuer: alice,
-      audience: service,
-      capability: {
-        can: "name/publish",
-        with: alice.did(),
-        content: CID.parse(
-          "bafybeidaaryc6aga3zjpujfbh4zabwzogd22y4njzrqzc4yv6nvyfm3tee"
-        ),
-        origin: null,
-      },
-    });
-    const publishResponse = await publish.execute(connection);
-    assert.ok(publishResponse.ok);
+    const { stop, urls } = await NameServer.start();
+    try {
+      const connection = Client.connect({
+        encoder: Transport.CAR, // encode as CAR because server decodes from car
+        decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
+        /** @type {Transport.Channel<typeof service>} */
+        channel: HTTP.open<IServiceAPI>({
+          fetch: universalFetch,
+          url: urls.control,
+        }), // simple `fetch` wrapper
+      });
+      const resolve = Client.invoke({
+        issuer: alice,
+        audience: alice,
+        capability: {
+          can: "name/resolve",
+          with: alice.did(),
+        },
+      });
+      const publishResponse = await resolve.execute(connection);
+      assert.ok(!publishResponse.ok);
+      assert.equal(publishResponse.name, "NotFoundError");
+    } finally {
+      await stop();
+    }
+  });
+  it("can invoke data plane", async () => {
+    const { stop, urls } = await NameServer.start();
+    try {
+      await testHttpNameResolver(universalFetch, urls.data);
+    } finally {
+      await stop();
+    }
+  });
+  it("can invoke publish via control plane and then resolve via data plane", async () => {
+    // start server
+    const alice = await Issuer.generate();
+    const aliceCid1 = ZERO_CID;
+    const { stop, urls, nameService } = await NameServer.start();
+    try {
+      // create client connection
+      const connection = Client.connect({
+        encoder: Transport.CAR, // encode as CAR because server decodes from car
+        decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
+        /** @type {Transport.Channel<typeof service>} */
+        channel: HTTP.open<IServiceAPI>({
+          fetch: universalFetch,
+          url: urls.control,
+        }), // simple `fetch` wrapper
+      });
+      // publish aliceDid1 => aliceCid1 via control plane
+      const publish = Client.invoke({
+        issuer: alice,
+        audience: nameService,
+        capability: {
+          can: "name/publish",
+          with: alice.did(),
+          content: aliceCid1,
+          origin: null,
+        },
+      });
+      const publishResponse = await publish.execute(connection);
+      assert.ok(publishResponse.ok);
+      // resolve aliceDid1 via data plane
+      const resolveAliceDid = Client.invoke({
+        issuer: alice,
+        audience: nameService,
+        capability: {
+          can: "name/resolve",
+          with: alice.did(),
+        },
+      });
+      const resolveResponse = await resolveAliceDid.execute(connection);
+      assert.ok(resolveResponse.ok);
+      // expect resolution.content===aliceCid1
+      assert.equal(
+        resolveResponse.value.content.toString(),
+        aliceCid1.toString()
+      );
+    } finally {
+      await stop();
+    }
   });
 });
+
+async function testHttpNameResolver(
+  universalFetch: typeof fetch,
+  baseUrl: URL
+) {
+  const index = HttpNameResolverUrls.index(baseUrl);
+  const indexResponse = await universalFetch(index.toString());
+  assert.ok(indexResponse.ok);
+  assert.equal(indexResponse.status, 200);
+  const indexResponseJson = await indexResponse.json();
+  assert.ok(indexResponseJson.message);
+}
