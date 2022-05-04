@@ -18,6 +18,7 @@ import * as HTTP from "ucanto/src/transport/http.js";
 import * as assert from "assert";
 import type * as UCAN from "ucanto/src/api.js";
 import { response } from "express";
+import { hasOwnProperty } from "./object.js";
 
 export async function create() {
   const nameService = NewService();
@@ -34,7 +35,17 @@ export async function create() {
   return { listeners, nameService };
 }
 
-export async function start(server = create()) {
+export async function start(
+  server = create(),
+  options?: {
+    control?: {
+      port?: number;
+    };
+    data?: {
+      port?: number;
+    };
+  }
+) {
   const { listeners, nameService } = await server;
   const httpServers = Object.fromEntries(
     Object.entries(listeners).map(([key, listener]) => [
@@ -53,8 +64,17 @@ export async function start(server = create()) {
   async function listen() {
     const listeningEntries = Object.entries(httpServers).map(
       async ([key, httpServer]) => {
+        const serverOptions =
+          options && hasOwnProperty(options, key) ? options[key] : undefined;
+        const serverPort =
+          serverOptions &&
+          typeof serverOptions === "object" &&
+          hasOwnProperty(serverOptions, "port") &&
+          typeof serverOptions.port === "number"
+            ? serverOptions.port
+            : 0;
         await new Promise((resolve, _reject) => {
-          httpServer.listen(0, () => {
+          httpServer.listen(serverPort, () => {
             resolve(true);
           });
         });
@@ -81,8 +101,16 @@ export async function start(server = create()) {
  * Run a server
  */
 export async function main() {
-  const argv = yargs(hideBin(process.argv)).argv;
-  const { stop, urls, nameService } = await start();
+  const argv = await yargs(hideBin(process.argv)).argv;
+  console.log({ argv });
+  const { stop, urls, nameService } = await start(undefined, {
+    control: {
+      port: argv.controlPort ? Number(argv.controlPort) : 0,
+    },
+    data: {
+      port: argv.dataPort ? Number(argv.dataPort) : 0,
+    },
+  });
   function handleExit(signal: string) {
     console.log(`Received ${signal}. Stopping NameServer`);
     stop()

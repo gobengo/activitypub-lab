@@ -23,6 +23,26 @@ describe("server", () => {
       await stop();
     }
   });
+  it("can be started with specific ports", async () => {
+    const controlPort = 1337;
+    const dataPort = controlPort + 1;
+    const { stop, urls } = await NameServer.start(undefined, {
+      control: {
+        port: controlPort,
+      },
+      data: {
+        port: dataPort,
+      },
+    });
+    try {
+      assert.ok(urls.control);
+      assert.ok(urls.control.toString().includes(String(controlPort)));
+      assert.ok(urls.data);
+      assert.ok(urls.data.toString().includes(String(dataPort)));
+    } finally {
+      await stop();
+    }
+  });
   it("can invoke control plane via ucanto Client HTTP transport", async () => {
     const alice = await Issuer.generate();
     const { stop, urls } = await NameServer.start();
