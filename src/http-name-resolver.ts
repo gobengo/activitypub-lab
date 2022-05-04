@@ -7,15 +7,14 @@ import {
   RequestHandler,
   Router,
 } from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import * as Client from "ucanto/src/client.js";
-import {
-  NewService,
-  IClientConnection,
-  IServiceAPI as INameServiceAPI,
-} from "./service";
+import { IServiceAPI as INameServiceAPI } from "./service";
 import * as Issuer from "./actor/issuer.js";
 import * as Transport from "ucanto/src/transport.js";
 import * as Server from "ucanto/src/server.js";
+
+const GATEWAY_HOST = "https://nftstorage.link";
 
 /**
  * HTTP RequestListener that does `name/resolve` over HTTP.
@@ -28,6 +27,16 @@ export async function HttpNameResolver(
   router.get("/", getIndex);
   router.get(/\/(did:[^/]+)/, await GetDidResolution(nameService));
   const app = express().use(router);
+
+  const proxyLogLevel = process.env.NODE_ENV === "test" ? "warn" : "debug";
+  app.use(
+    "/ipfs",
+    createProxyMiddleware({
+      target: GATEWAY_HOST,
+      changeOrigin: true,
+      logLevel: proxyLogLevel,
+    })
+  );
   return app;
 }
 
@@ -101,9 +110,9 @@ async function GetDidResolution(nameService: INameServiceAPI) {
       return;
     }
 
+    // redirect to /ipfs/cid, which will proxy to IPFS gateway
     res.writeHead(302, {
-      // TODO: don't hard-code gateway host
-      Location: `https://nftstorage.link/ipfs/${cid}`,
+      Location: `/ipfs/${cid}`,
     });
     res.end();
   });
