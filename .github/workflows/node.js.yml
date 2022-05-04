@@ -48,6 +48,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         with:
           node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
       - run: npm install
         if: ${{ steps.release.outputs.release_created }}
       - run: npm publish
