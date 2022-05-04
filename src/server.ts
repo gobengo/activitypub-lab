@@ -101,7 +101,7 @@ export async function start(
  * Run a server
  */
 export async function main() {
-  const argv = await yargs(hideBin(process.argv)).argv;
+  const argv = await yargs(hideBin(process.argv)).env("UCANTO_NAME").argv;
   console.log({ argv });
   const { stop, urls, nameService } = await start(undefined, {
     control: {
