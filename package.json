@@ -14,7 +14,7 @@
     "prettier:check": "npm run prettier -- -c",
     "prettier:fix": "npm run prettier -- -w",
     "prepublish": "npm run build",
-    "start": "npx ts-node src"
+    "start": "node --loader ts-node/esm src/index.ts"
   },
   "directories": {
     "lib": "./lib",
