@@ -1,6 +1,6 @@
 {
-  "name": "ucanto-test",
-  "version": "1.0.0",
+  "name": "@web3-storage/ucanto-name-system",
+  "version": "0.0.0",
   "description": "",
   "main": "./lib/index.js",
   "type": "module",
