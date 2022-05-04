@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.0.0...v1.1.0) (2022-05-04)
+
+
+### Features
+
+* add bin script ([fbc651d](https://github.com/web3-storage/ucanto-name-system/commit/fbc651d432d2c4125e76f8b5daf2060e40d7a72b))
+
 ## 1.0.0 (2022-05-04)
 
 
