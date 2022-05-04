@@ -8,7 +8,7 @@ import * as Issuer from "./actor/issuer.js";
 import { ucantoHttpRequestListener } from "./ucanto-node-http.js";
 import { withHttpServer } from "./http.js";
 import { universalFetch } from "./fetch.js";
-import { NewService } from "./service.js";
+import { IServiceAPI, NewService } from "./service.js";
 
 describe("http name server", () => {
   it("can be invoked via Client with HTTP transport", async () => {
@@ -26,7 +26,7 @@ describe("http name server", () => {
           encoder: Transport.CAR, // encode as CAR because server decodes from car
           decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
           /** @type {Transport.Channel<typeof service>} */
-          channel: HTTP.open<typeof service>({ fetch: universalFetch, url }), // simple `fetch` wrapper
+          channel: HTTP.open<IServiceAPI>({ fetch: universalFetch, url }), // simple `fetch` wrapper
         });
         const resolve = Client.invoke({
           issuer: alice,
