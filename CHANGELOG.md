@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.2.0...v1.3.0) (2022-05-04)
+
+
+### Features
+
+* add /ipfs route to proxy to gateway ([#10](https://github.com/web3-storage/ucanto-name-system/issues/10)) ([93f2602](https://github.com/web3-storage/ucanto-name-system/commit/93f26024deb202f27f4a4e832f45a3813fdbe374))
+
 ## [1.2.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.1.0...v1.2.0) (2022-05-04)
 
 
