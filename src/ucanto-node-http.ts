@@ -7,30 +7,40 @@ export function ucantoHttpRequestListener<T>(
   ucantoServer: Client.ServerView<T>
 ) {
   const listener: nodeHttp.RequestListener = (req, res) => {
-    all(req).then(async (httpRequestBodyChunks) => {
-      const httpRequestBodyArrayBuffer = uint8arrays.concat(
-        httpRequestBodyChunks
-      );
-      let ucantoResponse;
-      const headers = toHeadersRecord(req.headers);
-      try {
-        ucantoResponse = await ucantoServer.request({
-          body: httpRequestBodyArrayBuffer,
-          headers,
-        });
-      } catch (error) {
-        console.warn("ucantoServer error", error);
+    all(req)
+      .then(async (httpRequestBodyChunks) => {
+        const httpRequestBodyArrayBuffer = uint8arrays.concat(
+          httpRequestBodyChunks
+        );
+        let ucantoResponse;
+        const headers = toHeadersRecord(req.headers);
+        try {
+          ucantoResponse = await ucantoServer.request({
+            body: httpRequestBodyArrayBuffer,
+            headers,
+          });
+        } catch (error) {
+          console.warn("ucantoServer error", error);
+          res.writeHead(500);
+          res.end(
+            JSON.stringify({
+              message: error instanceof Error ? error.message : undefined,
+            })
+          );
+          return;
+        }
+        res.writeHead(200, ucantoResponse?.headers);
+        res.end(ucantoResponse?.body);
+      })
+      .catch((error) => {
         res.writeHead(500);
         res.end(
           JSON.stringify({
-            message: error instanceof Error ? error.message : undefined,
+            type: "Unexpected Error",
+            message: error.message,
           })
         );
-        return;
-      }
-      res.writeHead(200, ucantoResponse?.headers);
-      res.end(ucantoResponse?.body);
-    });
+      });
   };
   return listener;
 }

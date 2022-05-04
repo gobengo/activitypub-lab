@@ -8,7 +8,6 @@ import {
   InMemoryStorage,
 } from "./storage.js";
 
-
 type PublishResponse = {
   published: boolean;
 };

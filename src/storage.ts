@@ -19,19 +19,22 @@ function isDIDString(s: string): s is `${string}:${string}` {
   return s.match(/^did:.*/) != null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PublishContent = Link<any>;
+
 export type Publish = {
   can: "name/publish";
   with: `${string}:${string}`;
-  content: Link<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: PublishContent;
   // @todo this should be undefined-able, but doing so led to dag-cbor encoding error
   origin: null | Link<Publish>;
 };
 
-
 export interface StorageBackend {
   publish(
     did: string,
-    content: Link<any>,
+    content: PublishContent,
     origin: Link<Publish> | null
   ): Promise<boolean>;
 
@@ -44,7 +47,7 @@ export function InMemoryStorage(
   return {
     async publish(
       did: string,
-      content: Link<any>,
+      content: PublishContent,
       origin: Link<Publish, 0 | 1, number, number> | null
     ): Promise<boolean> {
       if (!isDIDString(did)) {

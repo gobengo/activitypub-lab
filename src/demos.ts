@@ -1,4 +1,3 @@
-import { RequestListener } from "http";
 import { ZERO_CID } from "./cid.js";
 import { withHttpServer } from "./http.js";
 import * as assert from "assert";
@@ -8,6 +7,7 @@ import * as Transport from "ucanto/src/transport.js";
 import * as Client from "ucanto/src/client.js";
 import * as Issuer from "./actor/issuer.js";
 import { universalFetch } from "./fetch.js";
+import { HttpNameResolver } from "./http-name-resolver.js";
 
 export async function simpleDemo() {
   // create actors = {alice}
@@ -15,17 +15,15 @@ export async function simpleDemo() {
   // create alice's initial content aliceCid1
   const aliceCid1 = ZERO_CID;
   // boot up the http gateway data plane
-  const httpGateway = HttpGateway();
+  const httpNameResolver = HttpNameResolver();
   // boot up control plane
   const connection = createNameServerDemoConnection();
-  console.log("about to use httpGateway");
-  await withHttpServer(httpGateway, async (baseUrl) => {
+  await withHttpServer(httpNameResolver, async (baseUrl) => {
     const index = new URL("/", baseUrl).toString();
     // fetch http gateway for aliceDid and expect http 404 response
-    console.log("fetching");
+    // @todo this should fetch aliceDid resolution, not index
     const resp1 = await universalFetch(index);
-    console.log("index fetch response ", resp1);
-    assert.equal(resp1.status, 404);
+    assert.equal(resp1.status, 200);
     // alice publishes mapping aliceDid -> aliceCid1
     const alicePublish1 = Client.invoke({
       issuer: alice,
@@ -94,11 +92,4 @@ export function writeDelegationDemo() {
   // yusef invokes publish with yusefCid1 for benDid1 and expects to succeed
   // ben resolves benDid1 and expects yusefCid1
   // potential followups: enxure expired delegation is not usable by yusef
-}
-
-function HttpGateway(): RequestListener {
-  return (_req, res) => {
-    res.writeHead(404);
-    res.end();
-  };
 }
