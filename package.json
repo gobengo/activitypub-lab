@@ -5,6 +5,9 @@
   "main": "./lib/index.js",
   "type": "module",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "mocha",
     "tsc": "tsc --declaration",
