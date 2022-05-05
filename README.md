@@ -15,9 +15,11 @@ There is a hosted instance [on glitch](https://glitch.com/edit/#!/cypress-flutte
 * ucanto HTTP transport control plane: https://cypress-fluttering-koala.glitch.me/control
 
 ```bash
-bash << EOF
-secret="$(npx @web3-storage/ucanto-name-system request-secret)"
-did="$(npx @web3-storage/ucanto-name-system whoami "$secret")"
+secret="$(npx --yes @web3-storage/ucanto-name-system request-secret)"
+echo "secret=$secret"
+
+did="$(npx --yes @web3-storage/ucanto-name-system whoami $secret)"
+echo "did=$did"
 
 glitch_data_uri="https://cypress-fluttering-koala.glitch.me"
 glitch_control_uri="$glitch_data_uri/control"
@@ -26,15 +28,13 @@ echo "resolving before publish, expecting 404 response"
 curl "$glitch_data_uri/$did" -i
 
 echo "publishing new cid"
-npx @web3-storage/ucanto-name-system publish --uri="$glitch_control_uri" --secret="$secret" --cid="bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy"
+npx --yes @web3-storage/ucanto-name-system publish --uri="$glitch_control_uri" --secret="$secret" --cid="bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy"
 
 echo "resolving after publish"
 curl "$glitch_data_uri/$did" -i | grep location
 
-# open in browser
 echo "opening in browser"; sleep 2;
 open "$glitch_data_uri/$did"
-EOF
 ```
 
 ## Interface
