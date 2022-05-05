@@ -20,7 +20,6 @@ export function ucantoHttpRequestListener<T>(
             headers,
           });
         } catch (error) {
-          console.warn("ucantoServer error", error);
           res.writeHead(500);
           res.end(
             JSON.stringify({

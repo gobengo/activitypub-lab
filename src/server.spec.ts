@@ -126,6 +126,52 @@ describe("server", () => {
       await stop();
     }
   });
+  it("cannot configure NameServer to listen on same port, same paths for different subsystems", async () => {
+    let threw = false;
+    try {
+      const { stop, urls, nameService } = await NameServer.start(undefined, {
+        port: 0,
+        control: {
+          path: "/",
+        },
+        data: {
+          path: "/",
+        },
+      });
+      await stop();
+    } catch (error) {
+      threw = true;
+    }
+    assert.equal(threw, true);
+  });
+  it("can configure NameServer to have control/data listen on same port, different http paths", async () => {
+    const controlPathPrefix = "/control";
+    const dataPathPrefix = "/data";
+    const { stop, urls, nameService } = await NameServer.start(undefined, {
+      port: 0,
+      control: {
+        path: controlPathPrefix,
+      },
+      data: {
+        path: dataPathPrefix,
+      },
+    });
+    try {
+      assert.ok(urls.control.toString().includes(controlPathPrefix));
+      assert.ok(urls.data.toString().includes(dataPathPrefix));
+      const dataIndexResponse = await universalFetch(urls.data.toString());
+      assert.equal(dataIndexResponse.status, 200);
+      const controlIndexResponse = await universalFetch(
+        urls.control.toString()
+      );
+      // this is an expected error
+      assert.equal(controlIndexResponse.status, 500);
+      const controlIndexResponseJson = await controlIndexResponse.json();
+      assert.ok(controlIndexResponseJson.message);
+    } finally {
+      await stop();
+    }
+  });
 });
 
 async function testHttpNameResolver(

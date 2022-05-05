@@ -17,8 +17,9 @@ import { universalFetch } from "./fetch.js";
 import * as HTTP from "ucanto/src/transport/http.js";
 import * as assert from "assert";
 import type * as UCAN from "ucanto/src/api.js";
-import { response } from "express";
+import { response, Router } from "express";
 import { hasOwnProperty } from "./object.js";
+import express from "express";
 
 export async function create() {
   const nameService = NewService();
@@ -35,66 +36,110 @@ export async function create() {
   return { listeners, nameService };
 }
 
+type NameServerSubsystem = "control" | "data";
+type NameServerSubsystemOptions<T> = {
+  [subsystem in NameServerSubsystem]: T;
+};
+type TcpPortOption = { port: number };
+type HttpPathOption = { path: string };
+// configure the subsystems to either listen on their own ports,
+// or to listen on the same http port, but mounted at different paths
+type NameServerSubsystemsOnDifferentPortOptions =
+  NameServerSubsystemOptions<TcpPortOption>;
+type NameServerSubsystemsOnSamePortOptions = {
+  port: number;
+} & NameServerSubsystemOptions<HttpPathOption>;
+type NameServerStartOptions =
+  | NameServerSubsystemsOnDifferentPortOptions
+  | NameServerSubsystemsOnSamePortOptions;
+type NameServerSubsystemUrls = NameServerSubsystemOptions<URL>;
+
 export async function start(
   server = create(),
-  options?: {
-    control?: {
-      port?: number;
-    };
-    data?: {
-      port?: number;
-    };
+  options: NameServerStartOptions = {
+    data: { port: 0 },
+    control: { port: 0 },
   }
 ) {
   const { listeners, nameService } = await server;
-  const httpServers = Object.fromEntries(
-    Object.entries(listeners).map(([key, listener]) => [
-      key,
-      nodeHttp.createServer(listener),
-    ])
-  );
-  await listen();
-  const urls = Object.fromEntries(
-    Object.entries(httpServers).map(([key, httpServer]) => {
-      return [key, addressUrl(httpServer.address())];
-    })
-  );
-  return { stop, urls, httpServers, nameService };
+  const { urls, httpServers } = hasOwnProperty(options, "port")
+    ? await listenSamePort(listeners, options)
+    : await listenDifferentPorts(listeners, options);
 
-  async function listen() {
-    const listeningEntries = Object.entries(httpServers).map(
-      async ([key, httpServer]) => {
-        const serverOptions =
-          options && hasOwnProperty(options, key) ? options[key] : undefined;
-        const serverPort =
-          serverOptions &&
-          typeof serverOptions === "object" &&
-          hasOwnProperty(serverOptions, "port") &&
-          typeof serverOptions.port === "number"
-            ? serverOptions.port
-            : 0;
-        await new Promise((resolve, _reject) => {
-          httpServer.listen(serverPort, () => {
-            resolve(true);
-          });
-        });
-        return [key, httpServer];
-      }
-    );
-  }
-  async function close() {
+  return { urls, nameService, stop: () => stop(httpServers) };
+
+  async function stop(httpServers: Array<nodeHttp.Server>) {
     await Promise.allSettled(
-      Object.values(httpServers).map(
+      httpServers.map(
         (server) =>
           new Promise((resolve, reject) => {
-            server.close((err) => (err ? reject(err) : resolve(err)));
+            server.close((error) => (error ? reject(error) : resolve(1)));
           })
       )
     );
   }
-  async function stop() {
-    await close();
+}
+
+async function listenSamePort(
+  listeners: { [key in NameServerSubsystem]: nodeHttp.RequestListener },
+  options: NameServerSubsystemsOnSamePortOptions
+): Promise<{
+  urls: NameServerSubsystemUrls;
+  httpServers: nodeHttp.Server[];
+}> {
+  const distinctPaths = new Set();
+  let subsystemName: keyof typeof listeners;
+  for (subsystemName in listeners) {
+    distinctPaths.add(options[subsystemName].path);
   }
+  if (distinctPaths.size !== Object.keys(listeners).length) {
+    throw new Error(
+      "Unable to listen on same port. At least two subsystems are configured to listen on same http path"
+    );
+  }
+  const requestListener: nodeHttp.RequestListener = (() => {
+    const router = Router();
+    let subsystem: keyof typeof listeners;
+    for (subsystem in listeners) {
+      router.use(options[subsystem].path, listeners[subsystem]);
+    }
+    const app = express().use(router);
+    return app;
+  })();
+  const httpServer = nodeHttp.createServer(requestListener);
+  await listen(httpServer, options.port);
+  const baseUrl = addressUrl(httpServer.address());
+  const urls: { [subsystem in NameServerSubsystem]: URL } = {
+    control: new URL(options.control.path, baseUrl),
+    data: new URL(options.data.path, baseUrl),
+  };
+  const httpServers = [httpServer];
+  return { urls, httpServers };
+}
+
+async function listenDifferentPorts(
+  listeners: { [key in NameServerSubsystem]: nodeHttp.RequestListener },
+  options: NameServerSubsystemsOnDifferentPortOptions
+): Promise<{
+  urls: NameServerSubsystemUrls;
+  httpServers: nodeHttp.Server[];
+}> {
+  const controlServer = nodeHttp.createServer(listeners.control);
+  await listen(controlServer, options.control.port);
+  const dataServer = nodeHttp.createServer(listeners.data);
+  await listen(dataServer, options.data.port);
+  const httpServers = [controlServer, dataServer];
+  const urls = {
+    control: addressUrl(controlServer.address()),
+    data: addressUrl(dataServer.address()),
+  };
+  return { urls, httpServers };
+}
+
+async function listen(httpServer: nodeHttp.Server, port: number) {
+  await new Promise((resolve, _reject) => {
+    httpServer.listen(port ?? 0, () => resolve(1));
+  });
 }
 
 /**
@@ -103,14 +148,26 @@ export async function start(
 export async function main() {
   const argv = await yargs(hideBin(process.argv)).env("UCANTO_NAME").argv;
   console.log({ argv });
-  const { stop, urls, nameService } = await start(undefined, {
-    control: {
-      port: argv.controlPort ? Number(argv.controlPort) : 0,
-    },
-    data: {
-      port: argv.dataPort ? Number(argv.dataPort) : 0,
-    },
-  });
+  const startOptions =
+    typeof argv.port !== "undefined"
+      ? {
+          port: Number(argv.port ?? 0),
+          control: {
+            path: String(argv.controlPath || "/control"),
+          },
+          data: {
+            path: String(argv.dataPath || "/"),
+          },
+        }
+      : {
+          control: {
+            port: Number(argv.controlPort || 0),
+          },
+          data: {
+            port: Number(argv.dataPort || 0),
+          },
+        };
+  const { stop, urls, nameService } = await start(undefined, startOptions);
   function handleExit(signal: string) {
     console.log(`Received ${signal}. Stopping NameServer`);
     stop()
