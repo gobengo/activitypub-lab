@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.3.1...v1.4.0) (2022-05-05)
+
+
+### Features
+
+* can configure path/ports via env vars ([796cd22](https://github.com/web3-storage/ucanto-name-system/commit/796cd22b0cd1e240d41f36f3d0058d68c8e46296))
+
 ### [1.3.1](https://github.com/web3-storage/ucanto-name-system/compare/v1.3.0...v1.3.1) (2022-05-04)
 
 
