@@ -50,7 +50,6 @@ describe("server", () => {
       const connection = Client.connect({
         encoder: Transport.CAR, // encode as CAR because server decodes from car
         decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
-        /** @type {Transport.Channel<typeof service>} */
         channel: HTTP.open<IServiceAPI>({
           fetch: universalFetch,
           url: urls.control,
@@ -89,7 +88,6 @@ describe("server", () => {
       const connection = Client.connect({
         encoder: Transport.CAR, // encode as CAR because server decodes from car
         decoder: Transport.CBOR, // decode as CBOR because server encodes as CBOR
-        /** @type {Transport.Channel<typeof service>} */
         channel: HTTP.open<IServiceAPI>({
           fetch: universalFetch,
           url: urls.control,
