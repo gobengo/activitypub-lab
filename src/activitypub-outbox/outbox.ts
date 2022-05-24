@@ -21,32 +21,31 @@ type JsonldProved<ProofPurpose> = {
   proof: Ed25519Signature2020<ProofPurpose>;
 };
 
-type CapabilityInvocation<SM> = SM extends ServiceMethod<
-  infer Request,
-  infer _Response
->
-  ? {
-      /** nonce */
-      id: string;
-      action: Request;
-      proof: {
-        /** capability being invoked */
-        capability: Uri;
-        created: Iso8601String;
-        /** creator of this invocation proof */
-        creator: Uri;
-      };
-    }
-  : never;
+type CapabilityInvocation<_Request, _Action> = {
+  "@context": "https://example.org/zcap/v1";
+  /** nonce */
+  id: string;
+  action: _Request;
+  proof: {
+    /** capability being invoked */
+    capability: Uri;
+    created: Iso8601String;
+    /** creator of this invocation proof */
+    creator: Uri;
+  };
+};
 
 /** type of Activity that can be posted to outbox */
 export type OutboxPostableActivity = AnnounceActivityPubCom;
 
+type InvokeOutboxPostWithActivity = CapabilityInvocation<
+  OutboxPostableActivity,
+  OutboxPostableActivity
+>;
+
 /** https://www.w3.org/TR/activitypub/#client-to-server-interactions */
 export type OutboxPost = {
-  Request:
-    | OutboxPostableActivity
-    | CapabilityInvocation<OutboxPostableActivity>;
+  Request: OutboxPostableActivity | InvokeOutboxPostWithActivity;
   Response: {
     posted: true;
   };
@@ -62,7 +61,9 @@ export type OutboxGet = {
 };
 
 /** type of Activity that can be in outbox */
-export type OutboxItem = KnownActivitypubActivity;
+export type OutboxItem =
+  | KnownActivitypubActivity
+  | InvokeOutboxPostWithActivity;
 
 /**
  * ActivityPub handler for GET outbox.
