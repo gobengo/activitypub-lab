@@ -7,24 +7,6 @@ import {
 } from "./activitypub-ucanto.js";
 import { Agent } from "ucanto/src/api";
 
-async function exampleInboxPost(
-  activitypub: ReturnType<typeof ActivityPubUcanto>,
-  actor: Agent
-) {
-  const response = await activitypub.inbox.post({
-    issuer: actor,
-    audience: activitypub,
-    capability: {
-      can: "activitypub/inbox/post",
-      with: actor.did(),
-      activity: createAnnounceActivityPubCom(),
-    },
-  });
-  assert.ok(response.ok);
-  assert.ok(response.value);
-  return response;
-}
-
 async function exampleInboxGet(
   activitypub: ReturnType<typeof ActivityPubUcanto>,
   actor: Agent
@@ -44,15 +26,62 @@ async function exampleInboxGet(
   return inbox;
 }
 
+async function examplePost(
+  activitypub: ReturnType<typeof ActivityPubUcanto>,
+  collectionRel: "outbox" | "inbox",
+  actor: Agent
+) {
+  // const collection = activitypub[collectionRel]
+  // const can: "activitypub/inbox/post" | "activitypub/outbox/post" = `activitypub/${collectionRel}/post` as const;
+  if (collectionRel === "inbox") {
+    const result1 = await (activitypub[collectionRel]).post({
+      issuer: actor,
+      audience: activitypub,
+      capability: {
+        can: "activitypub/inbox/post",
+        with: actor.did(),
+        activity: createAnnounceActivityPubCom(),
+      }
+    })
+    assert.ok(result1.ok);
+    assert.ok(result1.value);
+    return result1;
+  } else {
+    const result2 = await (activitypub[collectionRel]).post({
+      issuer: actor,
+      audience: activitypub,
+      capability: {
+        can: "activitypub/outbox/post",
+        with: actor.did(),
+        activity: createAnnounceActivityPubCom(),
+      },
+    });
+    assert.ok(result2.ok);
+    assert.ok(result2.value);
+    return result2;
+  }
+  throw new Error("unexpected collectionRel");
+}
+
 describe("activitypub-ucanto", () => {
   it("has apparently functional inbox", async () => {
     const alice = await Issuer.generate();
     const activitypub = ActivityPubUcanto();
     const postIntentions = new Array(3);
     for (const _i of postIntentions) {
-      await exampleInboxPost(activitypub, alice);
+      await examplePost(activitypub, "inbox", alice);
     }
     const inbox = await exampleInboxGet(activitypub, alice);
     assert.equal(inbox.totalItems, postIntentions.length);
+  });
+  it("has apparently functional outbox", async () => {
+    const alice = await Issuer.generate();
+    const activitypub = ActivityPubUcanto();
+    const outboxIntentions = new Array(3);
+    for (const _i of outboxIntentions) {
+      await examplePost(activitypub, "outbox", alice);
+    }
+    // const inbox = await exampleInboxGet(activitypub, alice);
+    // assert.equal(inbox.totalItems, outboxIntentions.length);
   });
 });
