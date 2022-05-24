@@ -52,8 +52,8 @@ export type InboxGetUcantoHandler = (
 ) => Promise<Result<InboxGetResponse, Error>>;
 
 export interface InboxUcanto {
-  get: InboxGetUcantoHandler,
-  post: InboxPostUcantoHandler
+  get: InboxGetUcantoHandler;
+  post: InboxPostUcantoHandler;
 }
 
 // bind outbox<->ucanto
@@ -76,7 +76,7 @@ export type OutboxPostUcanto = {
 
 export interface OutboxUcanto {
   get: OutboxGetUcantoHandler;
-  post: OutboxPostUcantoHandler
+  post: OutboxPostUcantoHandler;
 }
 
 /**
