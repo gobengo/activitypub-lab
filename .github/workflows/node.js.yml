@@ -55,4 +55,15 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
+  
+  docs:
+    runs-on: ubuntu-latest
+    needs:
+    - release
+    steps:
+    - run: npm run doc
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.4
+      with:
+        branch: gh-pages
+        folder: docs
