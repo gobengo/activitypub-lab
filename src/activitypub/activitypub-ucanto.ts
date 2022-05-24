@@ -5,21 +5,38 @@ export type { Result } from "ucanto/src/client";
 import type { Invocation, Link, UCAN } from "ucanto/src/client";
 export { Invocation, Capability } from "ucanto/src/client";
 import { AnnounceActivityPubCom } from "./announcement.js";
+/**
+ * ActivityPub service powered by ucanto.
+ * It exposes an interface of methods which handle ucanto Invocations
+ * @category activitypub-ucanto
+ */
+export function ActivityPubUcanto(): ActivityPubUcantoAbstraction {
+  const inboxRepository = new ArrayRepository<KnownActivitypubActivity>();
+  const outboxRepository = new ArrayRepository<KnownActivitypubActivity>();
+  return new _ActivityPubUcanto(
+    () => inboxRepository,
+    () => outboxRepository
+  );
+}
+
 export type {
   InboxPostableActivity,
+  InboxGetRequest,
   InboxGetResponse,
+  InboxPostRequest,
   InboxPostResponse,
 } from "./inbox.js";
 import {
   InboxGetRequest,
   InboxGetResponse,
-  InboxItem,
   InboxPostableActivity,
   InboxPostResponse,
 } from "./inbox.js";
 export type {
-  OutboxGetResponse,
   OutboxPostableActivity,
+  OutboxGetRequest,
+  OutboxGetResponse,
+  OutboxPostRequest,
   OutboxPostResponse,
 } from "./outbox.js";
 import {
@@ -135,17 +152,4 @@ export interface ActivityPubUcantoAbstraction {
   did(): DID;
   inbox: InboxUcanto;
   outbox: OutboxUcanto;
-}
-
-/**
- * ActivityPub service powered by ucanto.
- * It exposes an interface of methods which handle ucanto Invocations
- */
-export function ActivityPubUcanto(): ActivityPubUcantoAbstraction {
-  const inboxRepository = new ArrayRepository<KnownActivitypubActivity>();
-  const outboxRepository = new ArrayRepository<KnownActivitypubActivity>();
-  return new _ActivityPubUcanto(
-    () => inboxRepository,
-    () => outboxRepository
-  );
 }

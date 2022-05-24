@@ -1,4 +1,5 @@
 import { AnnounceActivityPubCom } from "./announcement";
+import { Handler } from "./handler.js";
 import { InboxItem } from "./inbox";
 import { ArrayRepository } from "./repository-array";
 
@@ -14,11 +15,15 @@ export type OutboxPostResponse = {
   posted: true;
 };
 
+export type OutboxGet = {
+  Request: OutboxGetRequest;
+  Resposne: OutboxGetResponse;
+};
+export type OutboxPost = {
+  Request: OutboxPostRequest;
+  Resposne: OutboxPostResponse;
+};
 export type OutboxItem = InboxItem;
-
-export interface Handler<Request, Response> {
-  handle(request: Request): Promise<Response>;
-}
 
 export class OutboxGetHandler
   implements Handler<OutboxGetRequest, OutboxGetResponse>
