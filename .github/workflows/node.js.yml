@@ -30,7 +30,11 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
-    - run: npm doc
+    - run: npm run doc --if-present
+    - uses: actions/upload-artifact@v3
+      with:
+        name: docs
+        path: docs
     - name: Deploy Docs 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.4
       with:
