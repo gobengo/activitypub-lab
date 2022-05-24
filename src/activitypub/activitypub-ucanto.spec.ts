@@ -24,6 +24,25 @@ async function exampleInboxGet(
   return inbox;
 }
 
+async function exampleOutboxGet(
+  activitypub: ReturnType<typeof ActivityPubUcanto>,
+  actor: Agent
+) {
+  const result = await activitypub.outbox.get({
+    issuer: actor,
+    audience: activitypub,
+    capability: {
+      can: "activitypub/outbox/get",
+      with: actor.did(),
+    },
+  });
+  assert.ok(result.ok);
+  const { value: inbox } = result;
+  assert.ok(inbox);
+  assert.equal(typeof inbox.totalItems, "number");
+  return inbox;
+}
+
 async function examplePost(
   activitypub: ReturnType<typeof ActivityPubUcanto>,
   collectionRel: "outbox" | "inbox",
@@ -79,7 +98,7 @@ describe("activitypub-ucanto", () => {
     for (const _i of outboxIntentions) {
       await examplePost(activitypub, "outbox", alice);
     }
-    // const inbox = await exampleInboxGet(activitypub, alice);
-    // assert.equal(inbox.totalItems, outboxIntentions.length);
+    const outbox = await exampleOutboxGet(activitypub, alice);
+    assert.equal(outbox.totalItems, outboxIntentions.length);
   });
 });

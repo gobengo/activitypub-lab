@@ -9,8 +9,10 @@ import {
   InboxPostResponse,
 } from "./inbox.js";
 import {
+  OutboxGetHandler,
   OutboxGetResponse,
   OutboxPostableActivity,
+  OutboxPostHandler,
   OutboxPostResponse,
 } from "./outbox.js";
 import { ArrayRepository } from "./repository-array.js";
@@ -41,10 +43,10 @@ class InboxUcanto {
 
 // bind outbox<->ucanto
 
-type OutboxPostHandler = (
+type OutboxPostUcantoHandler = (
   invocation: Invocation<OutboxPostUcanto>
 ) => Promise<Result<OutboxPostResponse, Error>>;
-type OutboxGetHandler = (
+type OutboxGetUcantoHandler = (
   invocation: Invocation<OutboxGetUcanto>
 ) => Promise<Result<OutboxGetResponse, Error>>;
 type OutboxGetUcanto = {
@@ -58,7 +60,7 @@ type OutboxPostUcanto = {
 };
 
 class OutboxUcanto {
-  constructor(public get: OutboxGetHandler, public post: OutboxPostHandler) {}
+  constructor(public get: OutboxGetUcantoHandler, public post: OutboxPostUcantoHandler) {}
 }
 
 /**
@@ -77,18 +79,13 @@ class _ActivityPubUcanto {
     return this.getInboxRepository().push(activity);
   };
   public get outbox(): OutboxUcanto {
-    const get: OutboxGetHandler = async (_invocation) => {
-      const value: OutboxGetResponse = {
-        totalItems: await this.getOutboxRepository().count(),
-      };
+    const get: OutboxGetUcantoHandler = async (_invocation) => {
+      const value: OutboxGetResponse = await (new OutboxGetHandler(this.getOutboxRepository())).handle({})
       return { ok: true, value };
     };
-    const post: OutboxPostHandler = async (_invocation) => {
+    const post: OutboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
-      await this.#receiveActivity(activity);
-      const value: OutboxPostResponse = {
-        posted: true,
-      };
+      const value: OutboxPostResponse = await (new OutboxPostHandler(this.getOutboxRepository())).handle(activity)
       return { ok: true, value };
     };
     return { get, post };
