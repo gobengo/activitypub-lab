@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.0 (2022-05-24)
+
+
+### Features
+
+* add /ipfs route to proxy to gateway ([#10](https://github.com/gobengo/activitypub-ucanto/issues/10)) ([93f2602](https://github.com/gobengo/activitypub-ucanto/commit/93f26024deb202f27f4a4e832f45a3813fdbe374))
+* add bin script ([fbc651d](https://github.com/gobengo/activitypub-ucanto/commit/fbc651d432d2c4125e76f8b5daf2060e40d7a72b))
+* add release-please action ([e7d0c75](https://github.com/gobengo/activitypub-ucanto/commit/e7d0c754ee911e3f80e71d1c424e356d5a80e8d2))
+* can configure path/ports via env vars ([796cd22](https://github.com/gobengo/activitypub-ucanto/commit/796cd22b0cd1e240d41f36f3d0058d68c8e46296))
+* implement issuer/audience ([ed63deb](https://github.com/gobengo/activitypub-ucanto/commit/ed63deb677900d3564e70684ec7639c3aabecc81))
+* read args from env vars with UCANTO_NAME_ prefix ([#7](https://github.com/gobengo/activitypub-ucanto/issues/7)) ([a0d1c2e](https://github.com/gobengo/activitypub-ucanto/commit/a0d1c2e39f053608e3b83350dcfc3d2867ccafc0))
+* remove ucan-storage dependency ([1586260](https://github.com/gobengo/activitypub-ucanto/commit/158626018d2670667fed892bf595fe96528c4c13))
+
+
+### Bug Fixes
+
+* follow redirects in gateway proxy route ([04cf86e](https://github.com/gobengo/activitypub-ucanto/commit/04cf86e74fe56b68ca750024860c8adfe51a286e))
+* ts errors ([e9f942f](https://github.com/gobengo/activitypub-ucanto/commit/e9f942fc809dd3a715fdaadf7ed84440ed79a523))
+
 ## [1.4.0](https://github.com/web3-storage/ucanto-name-system/compare/v1.3.1...v1.4.0) (2022-05-05)
 
 
