@@ -6,9 +6,7 @@ type InboxGet = {
   can: "activitypub/inbox/get";
 };
 type InboxGetResponse = {
-  inbox: {
-    totalItems: number;
-  };
+  totalItems: number;
 };
 
 type InboxPost = {
@@ -76,9 +74,7 @@ class _ActivityPubUcanto {
   public get inbox(): InboxUcanto {
     const get: InboxGetHandler = async (_invocation) => {
       const value: InboxGetResponse = {
-        inbox: {
-          totalItems: await this.getInboxRepository().count(),
-        },
+        totalItems: await this.getInboxRepository().count(),
       };
       return { ok: true, value };
     };

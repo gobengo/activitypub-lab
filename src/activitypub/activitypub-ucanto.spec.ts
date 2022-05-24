@@ -9,14 +9,14 @@ import { Agent } from "ucanto/src/api";
 
 async function exampleInboxPost(
   activitypub: ReturnType<typeof ActivityPubUcanto>,
-  issuer: Agent
+  actor: Agent
 ) {
   const response = await activitypub.inbox.post({
-    issuer,
+    issuer: actor,
     audience: activitypub,
     capability: {
       can: "activitypub/inbox/post",
-      with: issuer.did(),
+      with: actor.did(),
       activity: createAnnounceActivityPubCom(),
     },
   });
@@ -25,29 +25,34 @@ async function exampleInboxPost(
   return response;
 }
 
+async function exampleInboxGet(
+  activitypub: ReturnType<typeof ActivityPubUcanto>,
+  actor: Agent
+) {
+  const result = await activitypub.inbox.get({
+    issuer: actor,
+    audience: activitypub,
+    capability: {
+      can: "activitypub/inbox/get",
+      with: actor.did(),
+    }
+  })
+  assert.ok(result.ok);
+  const { value: inbox } = result;
+  assert.ok(inbox);
+  assert.equal(typeof inbox.totalItems, 'number')
+  return inbox;
+}
+
 describe("activitypub-ucanto", () => {
-  it("has functional inbox", async () => {
+  it("has apparently functional inbox", async () => {
     const alice = await Issuer.generate();
     const activitypub = ActivityPubUcanto();
     const postIntentions = new Array(3);
-    for (const iter of postIntentions) {
+    for (const _i of postIntentions) {
       await exampleInboxPost(activitypub, alice);
     }
-    /**
-     * Now let's get the inbox
-     */
-    const inboxGetResponse = await activitypub.inbox.get({
-      issuer: alice,
-      audience: activitypub,
-      capability: {
-        can: "activitypub/inbox/get",
-        with: alice.did(),
-      },
-    });
-    assert.ok(inboxGetResponse.ok);
-    assert.equal(
-      inboxGetResponse.value.inbox.totalItems,
-      postIntentions.length
-    );
+    const inbox = await exampleInboxGet(activitypub, alice);
+    assert.equal(inbox.totalItems, postIntentions.length);
   });
 });
