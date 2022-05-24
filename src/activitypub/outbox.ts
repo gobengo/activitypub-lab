@@ -16,7 +16,7 @@ export type OutboxPostResponse = {
 
 export type OutboxItem = InboxItem;
 
-interface Handler<Request, Response> {
+export interface Handler<Request, Response> {
     handle(request: Request): Promise<Response>
 }
 

@@ -18,23 +18,23 @@ import {
 import { ArrayRepository } from "./repository-array.js";
 
 // inbox
-type InboxGetUcanto = InboxGetRequest & {
+export type InboxGetUcanto = InboxGetRequest & {
   with: DID;
   can: "activitypub/inbox/get";
 };
-type InboxPostUcanto = {
+export type InboxPostUcanto = {
   can: "activitypub/inbox/post";
   with: DID;
   activity: InboxPostableActivity;
 };
-type InboxPostUcantoHandler = (
+export type InboxPostUcantoHandler = (
   invocation: Invocation<InboxPostUcanto>
 ) => Promise<Result<InboxPostResponse, Error>>;
-type InboxGetHandler = (
+export type InboxGetHandler = (
   invocation: Invocation<InboxGetUcanto>
 ) => Promise<Result<InboxGetResponse, Error>>;
 
-class InboxUcanto {
+export class InboxUcanto {
   constructor(
     public get: InboxGetHandler,
     public post: InboxPostUcantoHandler
@@ -43,23 +43,23 @@ class InboxUcanto {
 
 // bind outbox<->ucanto
 
-type OutboxPostUcantoHandler = (
+export type OutboxPostUcantoHandler = (
   invocation: Invocation<OutboxPostUcanto>
 ) => Promise<Result<OutboxPostResponse, Error>>;
-type OutboxGetUcantoHandler = (
+export type OutboxGetUcantoHandler = (
   invocation: Invocation<OutboxGetUcanto>
 ) => Promise<Result<OutboxGetResponse, Error>>;
-type OutboxGetUcanto = {
+export type OutboxGetUcanto = {
   with: DID;
   can: "activitypub/outbox/get";
 };
-type OutboxPostUcanto = {
+export type OutboxPostUcanto = {
   can: "activitypub/outbox/post";
   with: DID;
   activity: OutboxPostableActivity;
 };
 
-class OutboxUcanto {
+export class OutboxUcanto {
   constructor(public get: OutboxGetUcantoHandler, public post: OutboxPostUcantoHandler) {}
 }
 
@@ -108,7 +108,20 @@ class _ActivityPubUcanto {
 
 type KnownActivitypubActivity = AnnounceActivityPubCom;
 
-export function ActivityPubUcanto() {
+/**
+ * Abstract class for ActivityPub over ucanto
+ */
+export interface ActivityPubUcantoAbstraction {
+  did(): DID;
+  inbox: InboxUcanto
+  outbox: OutboxUcanto
+}
+
+/**
+ * ActivityPub service powered by ucanto.
+ * It exposes an interface of methods which handle ucanto Invocations
+ */
+export function ActivityPubUcanto(): ActivityPubUcantoAbstraction {
   const inboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   const outboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   return new _ActivityPubUcanto(
