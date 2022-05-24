@@ -1,10 +1,21 @@
-export type { DID } from "@ipld/dag-ucan/src/ucan";
+import {
+  InboxGetRequest,
+  InboxGetResponse,
+  InboxPostableActivity,
+  InboxPostResponse,
+} from "./inbox.js";
 import type { DID } from "@ipld/dag-ucan/src/ucan";
 import type { Result } from "ucanto/src/client";
-export type { Result } from "ucanto/src/client";
 import type { Invocation, Link, UCAN } from "ucanto/src/client";
-export { Invocation, Capability } from "ucanto/src/client";
 import { AnnounceActivityPubCom } from "./announcement.js";
+import { ArrayRepository } from "./repository-array.js";
+
+export type KnownActivitypubActivity = AnnounceActivityPubCom;
+
+export type { DID } from "@ipld/dag-ucan/src/ucan";
+export type { Result } from "ucanto/src/client";
+export { Invocation, Capability } from "ucanto/src/client";
+
 /**
  * ActivityPub service powered by ucanto.
  * It exposes an interface of methods which handle ucanto Invocations
@@ -26,27 +37,14 @@ export type {
   InboxPostRequest,
   InboxPostResponse,
 } from "./inbox.js";
+export type { OutboxGet, OutboxPost } from "../activitypub-outbox/outbox.js";
 import {
-  InboxGetRequest,
-  InboxGetResponse,
-  InboxPostableActivity,
-  InboxPostResponse,
-} from "./inbox.js";
-export type {
-  OutboxPostableActivity,
-  OutboxGetRequest,
-  OutboxGetResponse,
-  OutboxPostRequest,
-  OutboxPostResponse,
-} from "./outbox.js";
-import {
+  OutboxGet,
   OutboxGetHandler,
-  OutboxGetResponse,
+  OutboxPost,
   OutboxPostableActivity,
   OutboxPostHandler,
-  OutboxPostResponse,
-} from "./outbox.js";
-import { ArrayRepository } from "./repository-array.js";
+} from "../activitypub-outbox/outbox.js";
 
 export type Ability = UCAN.Ability;
 export type Resource = UCAN.Resource;
@@ -77,10 +75,10 @@ export interface InboxUcanto {
 
 export type OutboxPostUcantoHandler = (
   invocation: Invocation<OutboxPostUcanto>
-) => Promise<Result<OutboxPostResponse, Error>>;
+) => Promise<Result<OutboxPost["Response"], Error>>;
 export type OutboxGetUcantoHandler = (
   invocation: Invocation<OutboxGetUcanto>
-) => Promise<Result<OutboxGetResponse, Error>>;
+) => Promise<Result<OutboxGet["Response"], Error>>;
 export type OutboxGetUcanto = {
   with: DID;
   can: "activitypub/outbox/get";
@@ -109,15 +107,17 @@ class _ActivityPubUcanto {
     return "did:web:activitypub.com";
   }
   public get outbox(): OutboxUcanto {
+    // get outbox
     const get: OutboxGetUcantoHandler = async (_invocation) => {
-      const value: OutboxGetResponse = await new OutboxGetHandler(
+      const value: OutboxGet["Response"] = await new OutboxGetHandler(
         this.getOutboxRepository()
       ).handle({});
       return { ok: true, value };
     };
+    // post to outbox
     const post: OutboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
-      const value: OutboxPostResponse = await new OutboxPostHandler(
+      const value: OutboxPost["Response"] = await new OutboxPostHandler(
         this.getOutboxRepository()
       ).handle(activity);
       return { ok: true, value };
@@ -125,12 +125,14 @@ class _ActivityPubUcanto {
     return { get, post };
   }
   public get inbox(): InboxUcanto {
+    // get inbox
     const get: InboxGetUcantoHandler = async (_invocation) => {
       const value: InboxGetResponse = {
         totalItems: await this.getInboxRepository().count(),
       };
       return { ok: true, value };
     };
+    // post to inbox
     const post: InboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
       await this.getInboxRepository().push(activity);
@@ -142,8 +144,6 @@ class _ActivityPubUcanto {
     return { get, post };
   }
 }
-
-type KnownActivitypubActivity = AnnounceActivityPubCom;
 
 /**
  * Abstract class for ActivityPub over ucanto

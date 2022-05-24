@@ -10,7 +10,7 @@
     "access": "public"
   },
   "scripts": {
-    "doc": "npx typedoc src/index.ts --sort visibility --sort source-order",
+    "doc": "npx typedoc src/index.ts --sort visibility --sort static-first --sort alphabetical",
     "typedoc": "npx typedoc src/index.ts",
     "test": "NODE_ENV=test mocha",
     "tsc": "tsc --declaration",
