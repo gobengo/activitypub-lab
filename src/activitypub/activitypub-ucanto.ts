@@ -1,96 +1,64 @@
 import { DID } from "@ipld/dag-ucan/src/ucan";
 import type { Invocation, Link, Result } from "ucanto/src/client";
-
-// sample activity
-
-type AnnounceActivityPubCom = {
-  "@context": "https://www.w3.org/ns/activitystreams";
-  id: string;
-  type: "Announce";
-  actor: "activitypub.com";
-};
-
-export function createAnnounceActivityPubCom(
-  id: DID = "did:key:z6Mkvy3ZJUpwtvFpkMUFi5AxJaMhc8TK8LAXTR5RdyBPHWM1"
-): AnnounceActivityPubCom {
-  return {
-    "@context": "https://www.w3.org/ns/activitystreams",
-    id,
-    type: "Announce",
-    actor: "activitypub.com",
-  };
-}
+import { AnnounceActivityPubCom } from "./announcement.js";
+import {
+  InboxGetRequest,
+  InboxGetResponse,
+  InboxItem,
+  InboxPostableActivity,
+  InboxPostResponse,
+} from "./inbox.js";
+import {
+  OutboxGetResponse,
+  OutboxPostableActivity,
+  OutboxPostResponse,
+} from "./outbox.js";
+import { ArrayRepository } from "./repository-array.js";
 
 // inbox
-type InboxPostableActivity = AnnounceActivityPubCom;
-type InboxGet = {
+type InboxGetUcanto = InboxGetRequest & {
   with: DID;
   can: "activitypub/inbox/get";
 };
-type InboxGetResponse = {
-  totalItems: number;
-};
-type InboxPost = {
+type InboxPostUcanto = {
   can: "activitypub/inbox/post";
   with: DID;
   activity: InboxPostableActivity;
 };
-type InboxPostResponse = {
-  posted: true;
-};
-type InboxPostHandler = (
-  invocation: Invocation<InboxPost>
+type InboxPostUcantoHandler = (
+  invocation: Invocation<InboxPostUcanto>
 ) => Promise<Result<InboxPostResponse, Error>>;
 type InboxGetHandler = (
-  invocation: Invocation<InboxGet>
+  invocation: Invocation<InboxGetUcanto>
 ) => Promise<Result<InboxGetResponse, Error>>;
-type InboxItem = AnnounceActivityPubCom;
-
-class ArrayRepository<T> {
-  private inboxArray: Array<T> = [];
-  // constructor() {}
-  async push(activity: T): Promise<void> {
-    this.inboxArray.push(activity);
-  }
-  async count(): Promise<number> {
-    return this.inboxArray.length;
-  }
-}
 
 class InboxUcanto {
-  constructor(public get: InboxGetHandler, public post: InboxPostHandler) {}
+  constructor(
+    public get: InboxGetHandler,
+    public post: InboxPostUcantoHandler
+  ) {}
 }
 
-type OutboxPostableActivity = AnnounceActivityPubCom;
+// bind outbox<->ucanto
+
 type OutboxPostHandler = (
-  invocation: Invocation<OutboxPost>
+  invocation: Invocation<OutboxPostUcanto>
 ) => Promise<Result<OutboxPostResponse, Error>>;
 type OutboxGetHandler = (
-  invocation: Invocation<OutboxGet>
+  invocation: Invocation<OutboxGetUcanto>
 ) => Promise<Result<OutboxGetResponse, Error>>;
-type OutboxGet = {
+type OutboxGetUcanto = {
   with: DID;
   can: "activitypub/outbox/get";
 };
-type OutboxGetResponse = {
-  totalItems: number;
-};
-type OutboxPost = {
+type OutboxPostUcanto = {
   can: "activitypub/outbox/post";
   with: DID;
   activity: OutboxPostableActivity;
 };
-type OutboxPostResponse = {
-  posted: true;
-};
-
-type OutboxItem = InboxItem;
 
 class OutboxUcanto {
-  constructor(
-    public get: OutboxGetHandler,
-    public post: OutboxPostHandler,
-  ) {}
+  constructor(public get: OutboxGetHandler, public post: OutboxPostHandler) {}
 }
 
 /**
@@ -100,14 +68,14 @@ class _ActivityPubUcanto {
   // public inbox: InboxUcanto;
   constructor(
     private getInboxRepository: () => ArrayRepository<AnnounceActivityPubCom>,
-    private getOutboxRepository: () => ArrayRepository<AnnounceActivityPubCom>,
+    private getOutboxRepository: () => ArrayRepository<AnnounceActivityPubCom>
   ) {}
   public did(): DID {
     return "did:web:activitypub.com";
   }
   #receiveActivity = async (activity: AnnounceActivityPubCom) => {
     return this.getInboxRepository().push(activity);
-  }
+  };
   public get outbox(): OutboxUcanto {
     const get: OutboxGetHandler = async (_invocation) => {
       const value: OutboxGetResponse = {
@@ -132,7 +100,7 @@ class _ActivityPubUcanto {
       };
       return { ok: true, value };
     };
-    const post: InboxPostHandler = async (_invocation) => {
+    const post: InboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
       await this.getInboxRepository().push(activity);
       const value: InboxPostResponse = {
@@ -144,13 +112,13 @@ class _ActivityPubUcanto {
   }
 }
 
-type KnownActivitypubActivity = AnnounceActivityPubCom
+type KnownActivitypubActivity = AnnounceActivityPubCom;
 
 export function ActivityPubUcanto() {
   const inboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   const outboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   return new _ActivityPubUcanto(
     () => inboxRepository,
-    () => outboxRepository,
+    () => outboxRepository
   );
 }

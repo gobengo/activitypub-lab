@@ -1,11 +1,9 @@
 import { describe, it } from "mocha";
 import * as assert from "assert";
 import * as Issuer from "../actor/issuer.js";
-import {
-  ActivityPubUcanto,
-  createAnnounceActivityPubCom,
-} from "./activitypub-ucanto.js";
+import { ActivityPubUcanto } from "./activitypub-ucanto.js";
 import { Agent } from "ucanto/src/api";
+import { createAnnounceActivityPubCom } from "./announcement.js";
 
 async function exampleInboxGet(
   activitypub: ReturnType<typeof ActivityPubUcanto>,
@@ -17,12 +15,12 @@ async function exampleInboxGet(
     capability: {
       can: "activitypub/inbox/get",
       with: actor.did(),
-    }
-  })
+    },
+  });
   assert.ok(result.ok);
   const { value: inbox } = result;
   assert.ok(inbox);
-  assert.equal(typeof inbox.totalItems, 'number')
+  assert.equal(typeof inbox.totalItems, "number");
   return inbox;
 }
 
@@ -34,20 +32,20 @@ async function examplePost(
   // const collection = activitypub[collectionRel]
   // const can: "activitypub/inbox/post" | "activitypub/outbox/post" = `activitypub/${collectionRel}/post` as const;
   if (collectionRel === "inbox") {
-    const result1 = await (activitypub[collectionRel]).post({
+    const result1 = await activitypub[collectionRel].post({
       issuer: actor,
       audience: activitypub,
       capability: {
         can: "activitypub/inbox/post",
         with: actor.did(),
         activity: createAnnounceActivityPubCom(),
-      }
-    })
+      },
+    });
     assert.ok(result1.ok);
     assert.ok(result1.value);
     return result1;
   } else {
-    const result2 = await (activitypub[collectionRel]).post({
+    const result2 = await activitypub[collectionRel].post({
       issuer: actor,
       audience: activitypub,
       capability: {
