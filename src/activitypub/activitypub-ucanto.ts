@@ -1,6 +1,15 @@
-import { DID } from "@ipld/dag-ucan/src/ucan";
-import type { Invocation, Link, Result } from "ucanto/src/client";
+export type { DID } from "@ipld/dag-ucan/src/ucan";
+import type { DID } from "@ipld/dag-ucan/src/ucan";
+import type { Result } from "ucanto/src/client";
+export type { Result } from "ucanto/src/client";
+import type { Invocation, Link, UCAN } from "ucanto/src/client";
+export { Invocation, Capability } from "ucanto/src/client";
 import { AnnounceActivityPubCom } from "./announcement.js";
+export type {
+  InboxPostableActivity,
+  InboxGetResponse,
+  InboxPostResponse,
+} from "./inbox.js";
 import {
   InboxGetRequest,
   InboxGetResponse,
@@ -8,6 +17,11 @@ import {
   InboxPostableActivity,
   InboxPostResponse,
 } from "./inbox.js";
+export type {
+  OutboxGetResponse,
+  OutboxPostableActivity,
+  OutboxPostResponse,
+} from "./outbox.js";
 import {
   OutboxGetHandler,
   OutboxGetResponse,
@@ -16,6 +30,9 @@ import {
   OutboxPostResponse,
 } from "./outbox.js";
 import { ArrayRepository } from "./repository-array.js";
+
+export type Ability = UCAN.Ability;
+export type Resource = UCAN.Resource;
 
 // inbox
 export type InboxGetUcanto = InboxGetRequest & {
@@ -30,15 +47,13 @@ export type InboxPostUcanto = {
 export type InboxPostUcantoHandler = (
   invocation: Invocation<InboxPostUcanto>
 ) => Promise<Result<InboxPostResponse, Error>>;
-export type InboxGetHandler = (
+export type InboxGetUcantoHandler = (
   invocation: Invocation<InboxGetUcanto>
 ) => Promise<Result<InboxGetResponse, Error>>;
 
-export class InboxUcanto {
-  constructor(
-    public get: InboxGetHandler,
-    public post: InboxPostUcantoHandler
-  ) {}
+export interface InboxUcanto {
+  get: InboxGetUcantoHandler,
+  post: InboxPostUcantoHandler
 }
 
 // bind outbox<->ucanto
@@ -59,11 +74,9 @@ export type OutboxPostUcanto = {
   activity: OutboxPostableActivity;
 };
 
-export class OutboxUcanto {
-  constructor(
-    public get: OutboxGetUcantoHandler,
-    public post: OutboxPostUcantoHandler
-  ) {}
+export interface OutboxUcanto {
+  get: OutboxGetUcantoHandler;
+  post: OutboxPostUcantoHandler
 }
 
 /**
@@ -95,7 +108,7 @@ class _ActivityPubUcanto {
     return { get, post };
   }
   public get inbox(): InboxUcanto {
-    const get: InboxGetHandler = async (_invocation) => {
+    const get: InboxGetUcantoHandler = async (_invocation) => {
       const value: InboxGetResponse = {
         totalItems: await this.getInboxRepository().count(),
       };

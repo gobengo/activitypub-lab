@@ -2,10 +2,41 @@ import { main } from "./server.js";
 import { fileURLToPath } from "url";
 import process from "process";
 
-export * as activitypub from "./activitypub/activitypub.js";
-export * as announcement from "./activitypub/announcement.js";
-export * from "./activitypub/activitypub-ucanto";
-export { ArrayRepository } from "./activitypub/repository-array";
+export {
+  ActivityPubUcanto,
+} from "./activitypub/activitypub-ucanto";
+
+export type {
+  DID,
+  Invocation,
+  Result,
+
+  ActivityPubUcantoAbstraction,
+
+  InboxPostableActivity,
+  InboxUcanto,
+  InboxGetResponse,
+  InboxGetUcanto,
+  InboxGetUcantoHandler,
+  InboxPostResponse,
+  InboxPostUcanto,
+  InboxPostUcantoHandler,
+
+  OutboxPostableActivity,
+  OutboxUcanto,
+
+  OutboxGetResponse,
+  OutboxGetUcanto,
+  OutboxGetUcantoHandler,
+  
+  OutboxPostResponse,
+  OutboxPostUcanto,
+  OutboxPostUcantoHandler,
+} from "./activitypub/activitypub-ucanto"
+
+export type {
+  AnnounceActivityPubCom,
+} from "./activitypub/announcement.js"
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
