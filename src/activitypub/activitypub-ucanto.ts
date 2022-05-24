@@ -60,7 +60,10 @@ export type OutboxPostUcanto = {
 };
 
 export class OutboxUcanto {
-  constructor(public get: OutboxGetUcantoHandler, public post: OutboxPostUcantoHandler) {}
+  constructor(
+    public get: OutboxGetUcantoHandler,
+    public post: OutboxPostUcantoHandler
+  ) {}
 }
 
 /**
@@ -77,12 +80,16 @@ class _ActivityPubUcanto {
   }
   public get outbox(): OutboxUcanto {
     const get: OutboxGetUcantoHandler = async (_invocation) => {
-      const value: OutboxGetResponse = await (new OutboxGetHandler(this.getOutboxRepository())).handle({})
+      const value: OutboxGetResponse = await new OutboxGetHandler(
+        this.getOutboxRepository()
+      ).handle({});
       return { ok: true, value };
     };
     const post: OutboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
-      const value: OutboxPostResponse = await (new OutboxPostHandler(this.getOutboxRepository())).handle(activity)
+      const value: OutboxPostResponse = await new OutboxPostHandler(
+        this.getOutboxRepository()
+      ).handle(activity);
       return { ok: true, value };
     };
     return { get, post };
@@ -113,8 +120,8 @@ type KnownActivitypubActivity = AnnounceActivityPubCom;
  */
 export interface ActivityPubUcantoAbstraction {
   did(): DID;
-  inbox: InboxUcanto
-  outbox: OutboxUcanto
+  inbox: InboxUcanto;
+  outbox: OutboxUcanto;
 }
 
 /**
