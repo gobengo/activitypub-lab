@@ -42,7 +42,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: node
-          package-name: "@web3-storage/ucanto-name-system"
+          package-name: "activitypub-ucanto"
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         if: ${{ steps.release.outputs.release_created }}
