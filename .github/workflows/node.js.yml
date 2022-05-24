@@ -30,6 +30,12 @@ jobs:
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
+    - run: npm doc
+    - name: Deploy Docs 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.4
+      with:
+        branch: gh-pages
+        folder: docs
 
   release:
     runs-on: ubuntu-latest
@@ -55,11 +61,3 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: npm run doc
-        if: ${{ steps.release.outputs.release_created }}
-      - if: ${{ steps.release.outputs.release_created }}
-        name: Deploy Docs 🚀
-        uses: JamesIves/github-pages-deploy-action@4.1.4
-        with:
-          branch: gh-pages
-          folder: docs
