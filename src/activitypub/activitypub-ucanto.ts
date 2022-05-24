@@ -75,9 +75,6 @@ class _ActivityPubUcanto {
   public did(): DID {
     return "did:web:activitypub.com";
   }
-  #receiveActivity = async (activity: AnnounceActivityPubCom) => {
-    return this.getInboxRepository().push(activity);
-  };
   public get outbox(): OutboxUcanto {
     const get: OutboxGetUcantoHandler = async (_invocation) => {
       const value: OutboxGetResponse = await (new OutboxGetHandler(this.getOutboxRepository())).handle({})
