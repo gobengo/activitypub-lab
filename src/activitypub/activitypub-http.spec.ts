@@ -11,17 +11,19 @@ import { RequestListener } from "http";
 
 const HttpActivityPub = Object.assign(
   (): RequestListener => {
-  return (_req, _res) => {
-    _res.writeHead(200);
-    _res.end(JSON.stringify({ message: 'activitypub'}));
+    return (_req, _res) => {
+      _res.writeHead(200);
+      _res.end(JSON.stringify({ message: "activitypub" }));
+    };
+  },
+  {
+    urls: {
+      index(baseUrl: URL) {
+        return new URL(baseUrl);
+      },
+    },
   }
-}, {
-  urls: {
-    index(baseUrl: URL) {
-      return new URL(baseUrl)
-    }
-  }
-})
+);
 
 describe("activitypub-http", () => {
   it("responds to / with 200 and welcome message", async () => {
@@ -32,7 +34,9 @@ describe("activitypub-http", () => {
       assert.equal(resp.status, 200);
       const respBodyJson = await resp.json();
       assert.ok(respBodyJson.message);
-      assert.ok(String(respBodyJson.message).toLowerCase().includes("activitypub"));
+      assert.ok(
+        String(respBodyJson.message).toLowerCase().includes("activitypub")
+      );
     });
   });
 });
