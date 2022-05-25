@@ -37,7 +37,8 @@ export const announceActivityPubActivityType = t.type({
 });
 
 const outboxPostRoute: Route<
-  BadRequest<string, undefined> | Response.Created<OutboxPost["Response"]>
+  | BadRequest<string, undefined>
+  | Response.Created<OutboxPost["Response"], { location: string }>
 > = route
   .post("/") // Capture id from the path
   .use(Parser.body(announceActivityPubActivityType))
@@ -45,7 +46,8 @@ const outboxPostRoute: Route<
     const handler = new OutboxPostHandler(activities);
     const reqBody: AnnounceActivityPubCom = request.body;
     const response = await handler.handle(reqBody);
-    return Response.created(response);
+    const location = `?id=${reqBody.id}`;
+    return Response.created(response, { location });
   });
 
 export interface UrlResolver {

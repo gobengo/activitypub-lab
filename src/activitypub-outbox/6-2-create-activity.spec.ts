@@ -52,13 +52,22 @@ describe("activitypub-6-2-create-activity", () => {
       });
       assert.equal(resp.status, 201, "expect 201 created http response");
 
-      // parse json
+      const resultLocation = resp.headers.get("location");
+      assert.ok(resultLocation);
+      assert.equal(typeof resultLocation, "string");
+
+      // can fetch location
+      const checkResp = await universalFetch(
+        new URL(resultLocation, index).toString()
+      );
+      assert.equal(checkResp.status, 200);
+
+      // parse postOutbox response json
       const postOutboxResponse = await resp.json();
       assert.equal(postOutboxResponse.posted, true);
 
       // fetch outbox
       const outbox = await fetchOutbox(outboxListener, baseUrl);
-      console.log({ outbox });
       assert.equal(outbox.totalItems, 1);
     });
   });
