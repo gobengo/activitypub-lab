@@ -14,6 +14,7 @@ import {
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 
 /**
+ * @fileoverview Test http-outbox for requirements from Section 6.2 of the ActivityPub Spec
  * @see https://www.w3.org/TR/activitypub/#create-activity-outbox
  */
 
