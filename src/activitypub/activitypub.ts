@@ -1,5 +1,5 @@
 /** ActivityPub inbox */
-export * as inbox from "./inbox";
+export * as inbox from "../activitypub-inbox/inbox";
 
 /** ActivityPub outbox */
 export * as outbox from "../activitypub-outbox/outbox";

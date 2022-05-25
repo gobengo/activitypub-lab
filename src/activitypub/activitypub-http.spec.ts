@@ -2,11 +2,6 @@ import { describe, it } from "mocha";
 import { universalFetch } from "../fetch.js";
 import { withHttpServer } from "../http.js";
 import * as assert from "assert";
-import * as Issuer from "../actor/issuer.js";
-import { NewService } from "../service.js";
-import * as Client from "ucanto/src/client.js";
-import * as Server from "ucanto/src/server.js";
-import * as Transport from "ucanto/src/transport.js";
 import { RequestListener } from "http";
 
 const HttpActivityPub = Object.assign(

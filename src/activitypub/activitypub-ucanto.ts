@@ -3,7 +3,7 @@ import {
   InboxGetResponse,
   InboxPostableActivity,
   InboxPostResponse,
-} from "./inbox.js";
+} from "../activitypub-inbox/inbox.js";
 import type { DID } from "@ipld/dag-ucan/src/ucan";
 import type { Result } from "ucanto/src/client";
 import type { Invocation, Link, UCAN } from "ucanto/src/client";
@@ -36,7 +36,7 @@ export type {
   InboxGetResponse,
   InboxPostRequest,
   InboxPostResponse,
-} from "./inbox.js";
+} from "../activitypub-inbox/inbox.js";
 export type { OutboxGet, OutboxPost } from "../activitypub-outbox/outbox.js";
 import {
   OutboxGet,

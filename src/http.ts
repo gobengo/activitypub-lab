@@ -1,5 +1,4 @@
 import * as nodeHttp from "http";
-import { Http2ServerRequest } from "http2";
 import type { AddressInfo } from "net";
 
 export async function withHttpServer(

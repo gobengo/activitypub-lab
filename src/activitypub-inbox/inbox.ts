@@ -1,5 +1,4 @@
-import { Handler } from "./handler.js";
-import { AnnounceActivityPubCom } from "./announcement.js";
+import { AnnounceActivityPubCom } from "../activitypub/announcement.js";
 
 /** type of Activity accepted by Inbox */
 export type InboxPostableActivity = AnnounceActivityPubCom;
