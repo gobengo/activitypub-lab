@@ -13,9 +13,9 @@ export function createAnnounceActivityPubCom(
   id: DID = "did:key:z6Mkvy3ZJUpwtvFpkMUFi5AxJaMhc8TK8LAXTR5RdyBPHWM1"
 ): AnnounceActivityPubCom {
   return {
-    "@context": "https://www.w3.org/ns/activitystreams",
+    "@context": "https://www.w3.org/ns/activitystreams" as const,
     id,
-    type: "Announce",
-    actor: "activitypub.com",
+    type: "Announce" as const,
+    actor: "activitypub.com" as const,
   };
 }

@@ -56,6 +56,7 @@ export type OutboxGet = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   Request: {};
   Response: {
+    name: string;
     totalItems: number;
   };
 };
@@ -73,6 +74,7 @@ export class OutboxGetHandler implements ServiceMethodHandler<OutboxGet> {
   constructor(private outboxRepo: OutboxRepository) {}
   async handle(_request: OutboxGet["Request"]) {
     return {
+      name: "outbox",
       totalItems: await this.outboxRepo.count(),
     };
   }
