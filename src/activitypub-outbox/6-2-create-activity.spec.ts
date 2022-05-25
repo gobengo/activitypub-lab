@@ -72,19 +72,3 @@ async function fetchOutbox(listener: OutboxListener, baseUrl: URL) {
   const respJson = await resp.json();
   return respJson;
 }
-
-async function assertOutboxIsEmpty(outbox: unknown) {
-  assert.ok(typeof outbox === "object");
-  assert.ok(outbox);
-  assert.ok(hasOwnProperty(outbox, "totalItems"));
-  assert.equal(
-    typeof outbox.totalItems,
-    "number",
-    "expected outbox.totalItems to be a number"
-  );
-  assert.equal(
-    outbox.totalItems,
-    0,
-    "Expected initial totalItems to be 0. The outbox is initially empty."
-  );
-}
