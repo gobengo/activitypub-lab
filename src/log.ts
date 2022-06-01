@@ -7,7 +7,7 @@ export const ConsoleLog = () => {
   return (level: string, ...loggables: unknown[]) => {
     switch (level) {
       case "debug":
-        console.debug(...loggables);
+        console.warn(...loggables);
         break;
       case "info":
         console.info(...loggables);

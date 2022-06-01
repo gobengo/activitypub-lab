@@ -1,5 +1,4 @@
 (
-    1>&2 echo "src/activitypub-capabilities README codedown"
     cd src/activitypub-capabilities
     cat README.md | codedown javascript | NODE_NO_WARNINGS=1 node --loader='ts-node/esm' --input-type=module
 )

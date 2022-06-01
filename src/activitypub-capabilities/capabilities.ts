@@ -3,6 +3,7 @@ import {
   MemoryOutboxRepository,
   OutboxGetHandler,
   OutboxItem,
+  OutboxPostHandler,
   OutboxRepository,
 } from "../activitypub-outbox/outbox.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
@@ -14,7 +15,8 @@ import Ajv2020 from "ajv/dist/core.js";
 import { string } from "fp-ts";
 import * as assert from "assert";
 import { DebugLoggerFunction } from "util";
-import { DefaultLogger } from "../log.js";
+import { ConsoleLog, DefaultLogger, JSONLogger } from "../log.js";
+import { ServiceMethodHandler } from "../activitypub/handler.js";
 
 const ajv = new Ajv();
 
@@ -26,7 +28,9 @@ interface ExpectationChecker {
   (expectation: unknown, actual: unknown): Promise<void>;
 }
 
-const SimpleExpectationChecker = (): ExpectationChecker => {
+const SimpleExpectationChecker = (
+  _logger: DebugLoggerFunction
+): ExpectationChecker => {
   return async (expectation, actual) => {
     if (
       expectation &&
@@ -41,7 +45,10 @@ const SimpleExpectationChecker = (): ExpectationChecker => {
         expectationAjvSchema as unknown as JSONSchemaType<unknown>
       );
       if (validate(actual)) {
-        // console.debug('expectation met', actual);
+        // _logger('debug', {
+        //   verb: 'expectationCheckSucceed',
+        //   actual,
+        // })
       } else {
         const errors = validate.errors;
         throw Object.assign(new Error(`expectation not met: ${errors}`), {
@@ -53,21 +60,48 @@ const SimpleExpectationChecker = (): ExpectationChecker => {
   };
 };
 
+/** announce */
+
+const AnnounceActivityPubComCodec = t.type({
+  "@context": t.literal("https://www.w3.org/ns/activitystreams"),
+  type: t.literal("Announce"),
+  id: t.string,
+  actor: t.literal("activitypub.com"),
+});
+
+/** Post */
+
+const OutboxPostCodec = t.type({
+  verb: t.literal("post"),
+  target: t.literal("outbox"),
+  object: AnnounceActivityPubComCodec,
+});
+type OutboxPost = t.TypeOf<typeof OutboxPostCodec>;
+
 /** Outbox */
 
 const OutboxNameCodec = t.literal("outbox");
 type OutboxName = t.TypeOf<typeof OutboxNameCodec>;
 
-/** Get Capability */
+/** OutboxGet Capability */
 
 const GetCapabilityNameCodec = t.literal("outbox/capabilities/get");
 type GetCapabilityName = t.TypeOf<typeof GetCapabilityNameCodec>;
+
+/** OutboxPost Capability */
+
+const PostOutboxCapabilityNameCodec = t.literal("outbox/capabilities/post");
+type PostOutboxCapabilityName = t.TypeOf<typeof PostOutboxCapabilityNameCodec>;
 
 /** Get activity */
 
 const GetCodecType = t.type({
   verb: t.literal("get"),
-  object: t.union([OutboxNameCodec, GetCapabilityNameCodec]),
+  object: t.union([
+    OutboxNameCodec,
+    GetCapabilityNameCodec,
+    PostOutboxCapabilityNameCodec,
+  ]),
 });
 
 const GetCodecPartial = t.partial({
@@ -84,33 +118,31 @@ type GetType = t.TypeOf<typeof GetCodec>;
 /** getter */
 
 interface Getter {
-  get(getActivity: GetType): Promise<void>;
+  get(getActivity: GetType): Promise<unknown>;
 }
 
 class OutboxGetter implements Getter {
   constructor(
+    private logger: DebugLoggerFunction,
     private kv: Map<string, unknown>,
-    private outboxRepo: OutboxRepository,
-    private checkExpectation: ExpectationChecker = SimpleExpectationChecker()
+    private outboxGet: OutboxGetHandler
   ) {}
   async get(_request: GetType) {
     const request = ensureId(_request);
     const { verb, object } = request;
-    console.debug(
-      JSON.stringify({
-        ...request,
-        expectation: undefined,
-      })
-    );
-    let response;
+    let response = null;
     switch (object) {
       case "outbox":
-        const handler = new OutboxGetHandler(this.outboxRepo);
-        response = await handler.handle(request);
+        response = await this.outboxGet.handle(request);
         break;
       case "outbox/capabilities/get":
         response = {
-          content: "invoke this capability to post a message to the outbox",
+          content: "invoke this capability to get the outbox",
+        };
+        break;
+      case "outbox/capabilities/post":
+        response = {
+          content: "invoke this capability to post messages to the outbox",
         };
         break;
       default:
@@ -118,28 +150,16 @@ class OutboxGetter implements Getter {
         throw new Error(`unexpected get object ${object}`);
     }
 
-    const expectation = request.expectation;
-    if (expectation && response) {
-      await this.checkExpectation(expectation, response);
-    }
-
-    const result = request.result;
-    if (result) {
-      assert.ok(result);
-      const resultName = result.name;
-      this.kv.set(resultName, response);
-    }
-
     const finalResponse = ensureId(response);
-    console.debug(
-      JSON.stringify(
-        ensureId({
-          verb: "respond",
-          content: finalResponse,
-          inReplyTo: request.id,
-        })
-      )
-    );
+    // this.logger(
+    //   "debug",
+    //   ensureId({
+    //     verb: "respond",
+    //     content: finalResponse,
+    //     inReplyTo: request.id,
+    //   })
+    // );
+    return finalResponse;
   }
 }
 
@@ -155,9 +175,25 @@ interface Finisher {
   (activity: Finish): void;
 }
 
-const DefaultFinish = (): Finisher => (finish) => {
-  console.debug(JSON.stringify(finish));
+const DefaultFinish = (): Finisher => (_finish) => {
+  // console.debug(JSON.stringify(finish));
 };
+
+/** OutboxPost */
+
+interface OutboxPoster {
+  (post: OutboxPost): Promise<{
+    posted: true;
+    status: 201;
+  }>;
+}
+
+function DefaultOutboxPoster(outbox: OutboxRepository): OutboxPoster {
+  return async (post) => {
+    const response = await new OutboxPostHandler(outbox).handle(post.object);
+    return response;
+  };
+}
 
 /** actor */
 
@@ -167,32 +203,42 @@ interface Actor<Action> {
 
 class DefaultActorConfig {
   constructor(
+    private logger = DefaultLogger(),
     private kv: Map<string, unknown>,
     private outboxRepo: OutboxRepository,
-    public getter: Getter = new OutboxGetter(kv, outboxRepo),
+    public getter: Getter = new OutboxGetter(
+      logger,
+      kv,
+      new OutboxGetHandler(outboxRepo)
+    ),
     public finish: Finisher = DefaultFinish(),
-    public log: DebugLoggerFunction = DefaultLogger()
+    public log: DebugLoggerFunction = DefaultLogger(),
+    public outboxPost: OutboxPoster = DefaultOutboxPoster(outboxRepo),
+    public checkExpectation: ExpectationChecker = SimpleExpectationChecker(
+      logger
+    )
   ) {}
 }
 
 export const actor = (
+  _logger = JSONLogger(ConsoleLog()),
   kv = new Map<string, unknown>(),
   outbox = MemoryOutboxRepository(),
-  config = new DefaultActorConfig(kv, outbox)
+  config = new DefaultActorConfig(_logger, kv, outbox)
 ): Actor<unknown> => {
   return {
     async act(_activity) {
       const activity = ensureId(_activity as Record<string, unknown>);
+      let response: unknown = null;
 
-      console.debug(
-        JSON.stringify(
-          ensureId({
-            verb: "act",
-            object: activity,
-          })
-        )
-      );
-      let response;
+      // console.debug(
+      //   JSON.stringify(
+      //     ensureId({
+      //       verb: "act",
+      //       object: activity,
+      //     })
+      //   )
+      // );
       if (
         activity &&
         typeof activity === "object" &&
@@ -201,28 +247,70 @@ export const actor = (
         switch (activity.verb) {
           case "get":
             const get = decodeWith(GetCodec)(activity);
-            response = await config.getter.get(get);
+            const getResponse = await config.getter.get(get);
+            response = getResponse;
             break;
           case "finish":
             const finish = decodeWith(FinishCodec)(activity);
-            await config.finish(finish);
+            response = config.finish(finish);
             break;
           case "log":
-            const log = decodeWith(LogCodec())(activity);
+            const log = ensureId(decodeWith(LogCodec())(activity));
             const objectName = log.object.name;
-            config.log("info", {
-              ...log,
-              result: {
-                name: objectName,
-                value: kv.get(objectName),
-              },
+            response = ensureId({
+              verb: "log",
+              name: objectName,
+              value: kv.get(objectName),
+              inReplyTo: log.id,
             });
+            config.log("info", response);
+            break;
+          case "post":
+            const post = decodeWith(OutboxPostCodec)(activity);
+            response = await config.outboxPost(post);
             break;
           default:
             throw new Error(`unexpected activity verb ${activity.verb}`);
         }
       } else {
         throw new Error("activity with no .verb");
+      }
+      /**
+       * If request.expectation is set, it may be a schema to validate the response with
+       */
+      const expectation = hasOwnProperty(activity, "expectation")
+        ? activity.expectation
+        : undefined;
+      if (expectation) {
+        const actual = response;
+        // config.log("debug", { verb: "checkingExpectation", activity, expectation, actual: response || null })
+        if (typeof actual === "undefined") {
+          throw new Error("expectation but no actual");
+        }
+        try {
+          await config.checkExpectation(expectation, response);
+        } catch (error) {
+          config.log("warn", {
+            verb: "expectationFail",
+            error,
+          });
+          throw error;
+        }
+      }
+      /**
+       * If the request.result.name is set, it indicates that the result of the request (ie the response) should be saved in kv as key=request.result.name
+       */
+      if (hasOwnProperty(activity, "result") && activity.result && response) {
+        const WithResultCodec = t.type({
+          result: t.type({
+            name: t.string,
+          }),
+        });
+        const requestWithResult = decodeWith(WithResultCodec)(activity);
+        const kvName = requestWithResult.result.name;
+        assert.ok(kvName);
+        // config.log("debug", { verb: "kv/set", name: kvName, value: response });
+        kv.set(kvName, response);
       }
     },
   };

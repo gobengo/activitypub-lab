@@ -53,6 +53,7 @@ export type OutboxPost = {
   Request: OutboxPostableActivity | InvokeOutboxPostWithActivity;
   Response: {
     posted: true;
+    status: 201;
   };
 };
 
@@ -95,6 +96,7 @@ export class OutboxPostHandler implements ServiceMethodHandler<OutboxPost> {
     await this.outboxRepo.push(_request);
     return {
       posted: true as const,
+      status: 201 as const,
     };
   }
 }

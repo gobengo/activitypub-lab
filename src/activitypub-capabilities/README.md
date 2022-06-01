@@ -53,7 +53,7 @@ await act({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
-            "content": { "const": "invoke this capability to post a message to the outbox" },
+            "content": { "const": "invoke this capability to get the outbox" },
         },
         "required": ["content"]
     }
@@ -92,28 +92,85 @@ await act({
 })
 ```
 
-Get the capability to post to the activitypub inbox. call it postInboxCapability
+Get the capability to post to the activitypub outbox. call it postOutboxCapability
 
 
-```
-{
+```javascript
+await act({
     "verb": "get",
-    "object": "?capability=inboxPost",
-    "result": { "name": "postInboxCapability" },
-}
-```
-
-Invoke postInboxCapability to post to the inbox. call the response postInboxResponse.
-
-```
-{
-    "verb": "post",
-    "object": "",
-    "authorization": { "name": "postInboxCapability" },
-    "result": {
-        "name": "postInboxResponse"
+    "object": "outbox/capabilities/post",
+    "result": { "name": "postOutboxCapability" },
+    "expectation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "content": { "const": "invoke this capability to post messages to the outbox" },
+        },
+        "required": ["content"]
     }
-}
+})
+await act({
+    "verb": "log",
+    "object": {
+        name: "postOutboxCapability"
+    },
+})
+```
+
+Invoke postOutboxCapability to post to the outbox. call the response postOutboxResponse.
+
+```javascript
+await act({
+    "verb": "post",
+    "target": "outbox",
+    "object": {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        id: "foo",
+        type: "Announce",
+        actor: "activitypub.com"
+    },
+    "authorization": { "name": "postOutboxCapability" },
+    "result": {
+        "name": "postOutboxResponse"
+    },
+    "expectation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "status": { "const": 201 },
+        },
+        "required": ["status"],
+    }
+})
+await act({
+    "verb": "log",
+    "object": {
+        name: "postOutboxResponse"
+    },
+})
+```
+
+Get the outbox again, expect `.totalItems` to be 1 now that we have posted one time.
+
+```javascript
+await act({
+    "verb": "get",
+    "object": "outbox",
+    "result": { "name": "outbox" },
+    "expectation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "totalItems": { "const": 1 },
+        },
+        "required": ["totalItems"],
+    }
+
+})
+await act({
+    "verb": "log",
+    "object": { "name": "outbox" },
+})
 ```
 
 ```javascript
