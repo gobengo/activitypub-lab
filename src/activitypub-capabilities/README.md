@@ -71,20 +71,25 @@ await act({
 })
 ```
 
-Invoke getCapability to get collection. call it collection
+Invoke getCapability to get outbox. call it outbox
 
-```
-{
+```javascript
+await act({
     "verb": "get",
-    "object": "",
+    "object": "outbox",
     "authorization": { "name": "getCapability" },
     "id": "urn:uuid:02c26a1d-b25e-4cce-9bbe-9617bc22fbf5",
     "prev": "urn:uuid:6e9d2a4b-ac1d-4fb9-a059-efcec9343dbe",
-    "result": { "name": "collection" },
+    "result": { "name": "outbox" },
     "expectation": {
-        "totalItems": 0,
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "totalItems": { "const": 0 },
+        },
+        "required": ["totalItems"],
     }
-}
+})
 ```
 
 Get the capability to post to the activitypub inbox. call it postInboxCapability

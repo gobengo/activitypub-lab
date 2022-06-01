@@ -9,7 +9,11 @@ import { ArrayRepository } from "../activitypub/repository-array.js";
 import { hasOwnProperty } from "../object.js";
 import decodeWith from "./decodeWith.js";
 import Ajv, { JSONSchemaType } from "ajv";
+import { v4 as uuidv4 } from "uuid";
 import Ajv2020 from "ajv/dist/core.js";
+import { string } from "fp-ts";
+import * as assert from "assert";
+
 const ajv = new Ajv();
 
 /** expectation */
@@ -106,16 +110,21 @@ class OutboxGetter implements Getter {
         const x: never = object;
         throw new Error(`unexpected get object ${object}`);
     }
-    console.debug(
-      JSON.stringify({
-        verb: "respond",
-        content: response,
-      })
-    );
+
     const expectation = request.expectation;
     if (expectation && response) {
       await this.checkExpectation(expectation, response);
     }
+
+    const finalResponse = ensureId(response);
+    console.debug(
+      JSON.stringify(
+        ensureId({
+          verb: "respond",
+          content: finalResponse,
+        })
+      )
+    );
   }
 }
 
@@ -149,6 +158,21 @@ class DefaultActorConfig {
   ) {}
 }
 
+function ensureId(activity: object) {
+  activity = {
+    id:
+      activity && hasOwnProperty(activity, "id")
+        ? activity.id
+        : `urn:uuid:${uuidv4()}`,
+    ...activity,
+  };
+  assert.ok(activity);
+  assert.ok(typeof activity === "object");
+  assert.ok(hasOwnProperty(activity, "id"));
+  assert.ok(activity.id);
+  return activity;
+}
+
 export const actor = (
   outbox = MemoryOutboxRepository(),
   config = new DefaultActorConfig(outbox)
@@ -156,6 +180,19 @@ export const actor = (
   const activities: OutboxRepository = new ArrayRepository<OutboxItem>();
   return {
     async act(activity) {
+      if (typeof activity === "object" && activity) {
+        activity = ensureId(activity);
+      }
+
+      console.debug(
+        JSON.stringify(
+          ensureId({
+            type: "act",
+            object: activity,
+          })
+        )
+      );
+      let response;
       if (
         activity &&
         typeof activity === "object" &&
@@ -164,7 +201,7 @@ export const actor = (
         switch (activity.verb) {
           case "get":
             const get = decodeWith(GetCodec)(activity);
-            const object = await config.getter.get(get);
+            response = await config.getter.get(get);
             break;
           case "finish":
             const finish = decodeWith(FinishCodec)(activity);
