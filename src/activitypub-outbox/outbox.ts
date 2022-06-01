@@ -1,10 +1,15 @@
 import { KnownActivitypubActivity } from "../activitypub/activitypub-ucanto";
 import { AnnounceActivityPubCom } from "../activitypub/announcement";
 import { ServiceMethodHandler, ServiceMethod } from "../activitypub/handler.js";
-import { ArrayRepository } from "../activitypub/repository-array";
+import { ArrayRepository } from "../activitypub/repository-array.js";
 
 /** data repository for storing outbox items */
 export type OutboxRepository = ArrayRepository<OutboxItem>;
+
+export function MemoryOutboxRepository(): OutboxRepository {
+  const repo = new ArrayRepository<OutboxItem>();
+  return repo;
+}
 
 type Iso8601String = string;
 type Uri = string;
