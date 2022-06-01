@@ -60,6 +60,17 @@ await act({
 })
 ```
 
+Log getCapability
+
+```
+await act({
+    "verb": "log",
+    "object": {
+        name: "getCapability"
+    },
+})
+```
+
 Invoke getCapability to get collection. call it collection
 
 ```
