@@ -23,7 +23,7 @@ await act({
             {
                 "type": "object",
                 "properties": {
-                    "totalItems": { "type": "number" },
+                    "totalItems": { "const": 0 },
                 },
                 "required": ["totalItems"],
             },
@@ -37,7 +37,19 @@ await act({
             }
         ]
     },
-})
+    "result": {
+        name: "outbox",
+    }
+});
+```
+
+Log outbox
+
+```javascript
+await act({
+    verb: "log",
+    object: { name: "outbox" },
+});
 ```
 
 Get capability to get collection. call it getCapability
@@ -68,6 +80,20 @@ await act({
     "object": {
         name: "getCapability"
     },
+    "expectation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+            "value": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                    "content": { "const": "invoke this capability to get the outbox" },
+                }
+            }
+        },
+    }
 })
 ```
 

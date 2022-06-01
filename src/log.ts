@@ -15,6 +15,9 @@ export const ConsoleLog = () => {
       case "warn":
         console.warn(...loggables);
         break;
+      case "error":
+        console.error(...loggables);
+        break;
       default:
         throw new Error(`unexpected log level ${level}`);
     }

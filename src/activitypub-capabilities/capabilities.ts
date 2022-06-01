@@ -45,14 +45,21 @@ const SimpleExpectationChecker = (
         expectationAjvSchema as unknown as JSONSchemaType<unknown>
       );
       if (validate(actual)) {
-        // _logger('debug', {
-        //   verb: 'expectationCheckSucceed',
-        //   actual,
-        // })
+        _logger("debug", {
+          verb: "expectationCheckSucceed",
+          actual,
+        });
       } else {
-        const errors = validate.errors;
-        throw Object.assign(new Error(`expectation not met: ${errors}`), {
-          errors,
+        const error = Object.assign(
+          new Error(`expectation not met: ${validate.errors}`),
+          {
+            errors: validate.errors,
+          }
+        );
+        _logger("error", {
+          type: "expectationNotMet",
+          error,
+          actual,
         });
       }
     }
@@ -222,13 +229,17 @@ class DefaultActorConfig {
 
 export const actor = (
   _logger = JSONLogger(ConsoleLog()),
-  kv = new Map<string, unknown>(),
+  kv = new Map<string, string | object>(),
   outbox = MemoryOutboxRepository(),
   config = new DefaultActorConfig(_logger, kv, outbox)
 ): Actor<unknown> => {
   return {
     async act(_activity) {
-      const activity = ensureId(_activity as Record<string, unknown>);
+      const request = ensureId(_activity as Record<string, unknown>);
+      config.log("debug", {
+        type: "request",
+        request,
+      });
       let response: unknown = null;
 
       // console.debug(
@@ -240,77 +251,98 @@ export const actor = (
       //   )
       // );
       if (
-        activity &&
-        typeof activity === "object" &&
-        hasOwnProperty(activity, "verb")
+        request &&
+        typeof request === "object" &&
+        hasOwnProperty(request, "verb")
       ) {
-        switch (activity.verb) {
+        switch (request.verb) {
           case "get":
-            const get = decodeWith(GetCodec)(activity);
+            const get = decodeWith(GetCodec)(request);
             const getResponse = await config.getter.get(get);
             response = getResponse;
             break;
           case "finish":
-            const finish = decodeWith(FinishCodec)(activity);
+            const finish = decodeWith(FinishCodec)(request);
             response = config.finish(finish);
             break;
           case "log":
-            const log = ensureId(decodeWith(LogCodec())(activity));
+            const log = ensureId(decodeWith(LogCodec())(request));
             const objectName = log.object.name;
+            const value = kv.get(objectName);
+            assert.ok(value, `expect kv to have object ${objectName}`);
             response = ensureId({
-              verb: "log",
+              verb: "log/response",
+              context: request,
               name: objectName,
-              value: kv.get(objectName),
+              value,
               inReplyTo: log.id,
             });
             config.log("info", response);
             break;
           case "post":
-            const post = decodeWith(OutboxPostCodec)(activity);
+            const post = decodeWith(OutboxPostCodec)(request);
             response = await config.outboxPost(post);
             break;
           default:
-            throw new Error(`unexpected activity verb ${activity.verb}`);
+            throw new Error(`unexpected activity verb ${request.verb}`);
         }
       } else {
         throw new Error("activity with no .verb");
       }
-      /**
-       * If request.expectation is set, it may be a schema to validate the response with
-       */
-      const expectation = hasOwnProperty(activity, "expectation")
-        ? activity.expectation
-        : undefined;
-      if (expectation) {
-        const actual = response;
-        // config.log("debug", { verb: "checkingExpectation", activity, expectation, actual: response || null })
-        if (typeof actual === "undefined") {
-          throw new Error("expectation but no actual");
-        }
-        try {
-          await config.checkExpectation(expectation, response);
-        } catch (error) {
-          config.log("warn", {
-            verb: "expectationFail",
-            error,
-          });
-          throw error;
-        }
-      }
+
       /**
        * If the request.result.name is set, it indicates that the result of the request (ie the response) should be saved in kv as key=request.result.name
        */
-      if (hasOwnProperty(activity, "result") && activity.result && response) {
+      if (hasOwnProperty(request, "result") && request.result && response) {
         const WithResultCodec = t.type({
           result: t.type({
             name: t.string,
           }),
         });
-        const requestWithResult = decodeWith(WithResultCodec)(activity);
+        const requestWithResult = decodeWith(WithResultCodec)(request);
         const kvName = requestWithResult.result.name;
         assert.ok(kvName);
-        // config.log("debug", { verb: "kv/set", name: kvName, value: response });
+        assert.ok(typeof response === "object");
+        config.log("debug", { verb: "kv/set", name: kvName, value: response });
         kv.set(kvName, response);
+      }
+
+      /**
+       * If request.expectation is set, it may be a schema to validate the response with
+       */
+      const expectation = hasOwnProperty(request, "expectation")
+        ? request.expectation
+        : undefined;
+      if (expectation) {
+        const actual = response;
+        if (typeof actual === "undefined") {
+          config.log("debug", {
+            verb: "checkedExpectation",
+            activity: request,
+            expectation,
+            actual: response,
+          });
+          throw new Error("expectation but no actual");
+        }
+        try {
+          await config.checkExpectation(expectation, response);
+        } catch (error) {
+          console.log("warn", {
+            verb: "FAIL",
+            error,
+            activity: request,
+            expectation,
+            actual,
+          });
+          throw error;
+        }
+      }
+
+      if (response) {
+        config.log("debug", {
+          type: "response",
+          response,
+        });
       }
     },
   };
