@@ -13,6 +13,8 @@ import { v4 as uuidv4 } from "uuid";
 import Ajv2020 from "ajv/dist/core.js";
 import { string } from "fp-ts";
 import * as assert from "assert";
+import { DebugLoggerFunction } from "util";
+import { DefaultLogger } from "../log.js";
 
 const ajv = new Ajv();
 
@@ -70,6 +72,9 @@ const GetCodecType = t.type({
 
 const GetCodecPartial = t.partial({
   expectation: ExpectationCodec,
+  result: t.type({
+    name: t.string,
+  }),
 });
 
 const GetCodec = t.intersection([GetCodecType, GetCodecPartial]);
@@ -84,10 +89,12 @@ interface Getter {
 
 class OutboxGetter implements Getter {
   constructor(
+    private kv: Map<string, unknown>,
     private outboxRepo: OutboxRepository,
     private checkExpectation: ExpectationChecker = SimpleExpectationChecker()
   ) {}
-  async get(request: GetType) {
+  async get(_request: GetType) {
+    const request = ensureId(_request);
     const { verb, object } = request;
     console.debug(
       JSON.stringify({
@@ -116,12 +123,20 @@ class OutboxGetter implements Getter {
       await this.checkExpectation(expectation, response);
     }
 
+    const result = request.result;
+    if (result) {
+      assert.ok(result);
+      const resultName = result.name;
+      this.kv.set(resultName, response);
+    }
+
     const finalResponse = ensureId(response);
     console.debug(
       JSON.stringify(
         ensureId({
           verb: "respond",
           content: finalResponse,
+          inReplyTo: request.id,
         })
       )
     );
@@ -152,42 +167,27 @@ interface Actor<Action> {
 
 class DefaultActorConfig {
   constructor(
+    private kv: Map<string, unknown>,
     private outboxRepo: OutboxRepository,
-    public getter: Getter = new OutboxGetter(outboxRepo),
-    public finish: Finisher = DefaultFinish()
+    public getter: Getter = new OutboxGetter(kv, outboxRepo),
+    public finish: Finisher = DefaultFinish(),
+    public log: DebugLoggerFunction = DefaultLogger()
   ) {}
 }
 
-function ensureId(activity: object) {
-  activity = {
-    id:
-      activity && hasOwnProperty(activity, "id")
-        ? activity.id
-        : `urn:uuid:${uuidv4()}`,
-    ...activity,
-  };
-  assert.ok(activity);
-  assert.ok(typeof activity === "object");
-  assert.ok(hasOwnProperty(activity, "id"));
-  assert.ok(activity.id);
-  return activity;
-}
-
 export const actor = (
+  kv = new Map<string, unknown>(),
   outbox = MemoryOutboxRepository(),
-  config = new DefaultActorConfig(outbox)
+  config = new DefaultActorConfig(kv, outbox)
 ): Actor<unknown> => {
-  const activities: OutboxRepository = new ArrayRepository<OutboxItem>();
   return {
-    async act(activity) {
-      if (typeof activity === "object" && activity) {
-        activity = ensureId(activity);
-      }
+    async act(_activity) {
+      const activity = ensureId(_activity as Record<string, unknown>);
 
       console.debug(
         JSON.stringify(
           ensureId({
-            type: "act",
+            verb: "act",
             object: activity,
           })
         )
@@ -207,6 +207,17 @@ export const actor = (
             const finish = decodeWith(FinishCodec)(activity);
             await config.finish(finish);
             break;
+          case "log":
+            const log = decodeWith(LogCodec())(activity);
+            const objectName = log.object.name;
+            config.log("info", {
+              ...log,
+              result: {
+                name: objectName,
+                value: kv.get(objectName),
+              },
+            });
+            break;
           default:
             throw new Error(`unexpected activity verb ${activity.verb}`);
         }
@@ -216,3 +227,32 @@ export const actor = (
     },
   };
 };
+
+function ensureId<T extends Record<string, unknown>>(
+  activity: T
+): T & { id: unknown } {
+  activity = {
+    ...activity,
+    id:
+      activity && hasOwnProperty(activity, "id")
+        ? activity.id
+        : `urn:uuid:${uuidv4()}`,
+  };
+  assert.ok(activity);
+  assert.ok(typeof activity === "object");
+  assert.ok(hasOwnProperty(activity, "id"));
+  assert.ok(activity.id);
+  assert.ok(typeof activity.id === "string");
+  return activity;
+}
+
+/* log */
+
+function LogCodec() {
+  return t.type({
+    verb: t.literal("log"),
+    object: t.type({
+      name: t.string,
+    }),
+  });
+}

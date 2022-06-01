@@ -62,7 +62,7 @@ await act({
 
 Log getCapability
 
-```
+```javascript
 await act({
     "verb": "log",
     "object": {
