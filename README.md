@@ -1,4 +1,4 @@
-# activitypub-ucanto
+# activitypub-lab
 
 ActivityPub + zcap server.
 
