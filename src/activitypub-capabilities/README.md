@@ -33,58 +33,49 @@ await act({
 });
 ```
 
-Get capability to get collection. call it getCapability
+Get capability to get collection. call it getOutboxCapability
 
 ```javascript
 await act({
     "verb": "get",
-    "object": "outbox/capabilities/get",
+    "object": {
+        "type": "outbox/capabilities/get",
+        "invoker": "activitypub-capabilities README.md",
+    },
     "result": {
-        "name": "getCapability"
+        "name": "getOutboxCapability"
     },
     "expectation": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
+            "type":  { "const": "outbox/capabilities/get" },
             "content": { "const": "invoke this capability to get the outbox" },
+            "invoker": { "const": "activitypub-capabilities README.md" },
         },
-        "required": ["content"]
+        "required": ["content", "type", "invoker"]
     }
 })
 ```
 
-Log getCapability
+Log getOutboxCapability
 
 ```javascript
 await act({
     "verb": "log",
     "object": {
-        name: "getCapability"
-    },
-    "expectation": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "required": ["value"],
-        "properties": {
-            "value": {
-                "type": "object",
-                "required": ["content"],
-                "properties": {
-                    "content": { "const": "invoke this capability to get the outbox" },
-                }
-            }
-        },
+        name: "getOutboxCapability"
     }
 })
 ```
 
-Invoke getCapability to get outbox. call it outbox
+Invoke getOutboxCapability to get outbox. call it outbox
 
 ```javascript
 await act({
     "verb": "get",
     "object": "outbox",
-    "authorization": { "name": "getCapability" },
+    "authorization": { "name": "getOutboxCapability" },
     "id": "urn:uuid:02c26a1d-b25e-4cce-9bbe-9617bc22fbf5",
     "prev": "urn:uuid:6e9d2a4b-ac1d-4fb9-a059-efcec9343dbe",
     "result": { "name": "outbox" },

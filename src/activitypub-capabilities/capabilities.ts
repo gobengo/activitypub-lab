@@ -93,8 +93,16 @@ type OutboxName = t.TypeOf<typeof OutboxNameCodec>;
 
 /** OutboxGet Capability */
 
-const GetCapabilityNameCodec = t.literal("outbox/capabilities/get");
-type GetCapabilityName = t.TypeOf<typeof GetCapabilityNameCodec>;
+const OutboxGetCapabilityNameCodec = t.literal("outbox/capabilities/get");
+type OutboxGetCapabilityName = t.TypeOf<typeof OutboxGetCapabilityNameCodec>;
+
+const OutboxGetCapabilityRequestCodec = t.type({
+  type: OutboxGetCapabilityNameCodec,
+  invoker: t.string,
+});
+type OutboxGetCapabilityRequest = t.TypeOf<
+  typeof OutboxGetCapabilityRequestCodec
+>;
 
 /** OutboxPost Capability */
 
@@ -108,7 +116,7 @@ const GetCodecType = t.type({
   verb: t.literal("get"),
   object: t.union([
     OutboxNameCodec,
-    GetCapabilityNameCodec,
+    OutboxGetCapabilityRequestCodec,
     PostOutboxCapabilityNameCodec,
   ]),
 });
@@ -140,13 +148,18 @@ class OutboxGetter implements Getter {
     const request = ensureId(_request);
     const { verb, object } = request;
     let response = null;
-    switch (object) {
+    const objectType = typeof object === "string" ? object : object.type;
+    switch (objectType) {
       case "outbox":
         response = await this.outboxGet.handle(request);
         break;
       case "outbox/capabilities/get":
+        assert.ok(typeof object === "object");
+        assert.ok(object.type === "outbox/capabilities/get");
         response = {
+          type: objectType,
           content: "invoke this capability to get the outbox",
+          invoker: object.invoker,
         };
         break;
       case "outbox/capabilities/post":
@@ -155,7 +168,7 @@ class OutboxGetter implements Getter {
         };
         break;
       default:
-        const x: never = object;
+        const x: never = objectType;
         throw new Error(`unexpected get object ${object}`);
     }
 
