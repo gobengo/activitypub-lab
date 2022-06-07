@@ -23,13 +23,6 @@ await act({
             {
                 "type": "object",
                 "properties": {
-                    "totalItems": { "const": 0 },
-                },
-                "required": ["totalItems"],
-            },
-            {
-                "type": "object",
-                "properties": {
                     "name": { "const": "NotAuthorizedError" },
                     "status": { "const": 401 },
                 },
@@ -37,18 +30,6 @@ await act({
             }
         ]
     },
-    "result": {
-        name: "outbox",
-    }
-});
-```
-
-Log outbox
-
-```javascript
-await act({
-    verb: "log",
-    object: { name: "outbox" },
 });
 ```
 
