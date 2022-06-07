@@ -1,37 +1,43 @@
-import { describe, it } from "mocha";
+import { test } from "mocha";
 import { universalFetch } from "../fetch.js";
 import { withHttpServer } from "../http.js";
 import * as assert from "assert";
 import { OutboxListener } from "./http-outbox.js";
 import { hasOwnProperty } from "../object.js";
 
-describe("activitypub-outbox", () => {
-  // disabled until update providing authorziation
-  it("responds to / with 401 and NotAuthorizedError", async () => {
-    const outboxListener = OutboxListener();
-    await withHttpServer(outboxListener, async (baseUrl) => {
-      const index = outboxListener.urls.index(baseUrl);
-      const resp = await universalFetch(index.toString());
-      const expectedStatus = 401;
-      assert.equal(resp.status, expectedStatus);
-      const outbox = await resp.json();
-      assertProperty(outbox, "status", expectedStatus);
-      assertProperty(outbox, "name", "NotAuthorizedError");
-    });
+// disabled until update providing authorziation
+test("activitypub-outbox responds to / with 401 and NotAuthorizedError", async () => {
+  const outboxListener = OutboxListener();
+  await withHttpServer(outboxListener, async (baseUrl) => {
+    const index = outboxListener.urls.index(baseUrl);
+    const resp = await universalFetch(index.toString());
+    const expectedStatus = 401;
+    assert.equal(resp.status, expectedStatus);
+    const outbox = await resp.json();
+    assertProperty(outbox, "status", expectedStatus);
+    assertProperty(outbox, "name", "NotAuthorizedError");
   });
-  // // disabled until update providing authorziation
-  // it.skip("responds to / with 200 and has name", async () => {
-  //   const outboxListener = OutboxListener();
-  //   await withHttpServer(outboxListener, async (baseUrl) => {
-  //     const index = outboxListener.urls.index(baseUrl);
-  //     const resp = await universalFetch(index.toString());
-  //     const expectedStatus = 200;
-  //     assert.equal(resp.status, expectedStatus);
-  //     const outbox = await resp.json();
-  //     assertProperty(outbox, 'status', expectedStatus);
-  //     await assertOutboxIsNamed(outbox, "outbox");
-  //   });
-  // });
+});
+
+test("activitypub-outbox responds to / + authz with 200 and has name", async () => {
+  const authzRequirement = `Bearer ${Math.random().toString().slice(2)}`;
+  const authorizer = (authz: unknown) => {
+    return authz === authzRequirement;
+  };
+  const outboxListener = OutboxListener({ authorizer });
+  await withHttpServer(outboxListener, async (baseUrl) => {
+    const index = outboxListener.urls.index(baseUrl);
+    const resp = await universalFetch(index.toString(), {
+      headers: {
+        authorization: authzRequirement,
+      },
+    });
+    const expectedStatus = 200;
+    assert.equal(resp.status, expectedStatus);
+    const outbox = await resp.json();
+    assertProperty(outbox, "status", expectedStatus);
+    await assertOutboxIsNamed(outbox, "outbox");
+  });
 });
 
 async function assertOutboxIsNamed(outbox: unknown, expectedName: string) {

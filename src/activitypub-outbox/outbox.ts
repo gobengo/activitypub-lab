@@ -3,6 +3,15 @@ import { AnnounceActivityPubCom } from "../activitypub/announcement";
 import { ServiceMethodHandler, ServiceMethod } from "../activitypub/handler.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 
+export type Authorizer<Authorization = unknown> = (
+  authorization: Authorization
+) => boolean;
+
+export type OutboxOptions = {
+  authorizer: Authorizer;
+  repository: ArrayRepository<OutboxItem>;
+};
+
 /** data repository for storing outbox items */
 export type OutboxRepository = ArrayRepository<OutboxItem>;
 
@@ -69,9 +78,11 @@ type NotAuthorizedError = {
 };
 
 /** https://www.w3.org/TR/activitypub/#outbox */
-export type OutboxGet = {
+export type OutboxGet<Authorization = unknown> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
-  Request: {};
+  Request: {
+    authorization: Authorization;
+  };
   Response: Outbox | NotAuthorizedError;
 };
 
@@ -84,15 +95,32 @@ export type OutboxItem =
  * ActivityPub handler for GET outbox.
  * It should return info about the outbox, e.g. how many items it contains and maybe a preview of them.
  */
-export class OutboxGetHandler implements ServiceMethodHandler<OutboxGet> {
-  constructor(private outboxRepo: OutboxRepository) {}
-  async handle(_request: OutboxGet["Request"]): Promise<OutboxGet["Response"]> {
-    return this.notAuthorizedResponse();
+export class OutboxGetHandler<Authorization = unknown>
+  implements ServiceMethodHandler<OutboxGet<Authorization>>
+{
+  constructor(
+    private outboxRepo: OutboxRepository,
+    private authorize: Authorizer<Authorization>
+  ) {}
+  async handle(
+    _request: OutboxGet<Authorization>["Request"]
+  ): Promise<OutboxGet<Authorization>["Response"]> {
+    if (!this.authorize(_request.authorization)) {
+      return this.notAuthorizedResponse();
+    }
+    return this.outboxResponse();
   }
   protected notAuthorizedResponse(): NotAuthorizedError {
     return {
       name: "NotAuthorizedError",
       status: 401 as const,
+    };
+  }
+  protected async outboxResponse(): Promise<Outbox> {
+    return {
+      name: "outbox",
+      status: 200 as const,
+      totalItems: await this.outboxRepo.count(),
     };
   }
 }

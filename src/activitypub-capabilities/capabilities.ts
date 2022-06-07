@@ -1,5 +1,6 @@
 import * as t from "io-ts";
 import {
+  Authorizer,
   MemoryOutboxRepository,
   OutboxGetHandler,
   OutboxItem,
@@ -103,6 +104,7 @@ type PostOutboxCapabilityName = t.TypeOf<typeof PostOutboxCapabilityNameCodec>;
 /** Get activity */
 
 const GetCodecType = t.type({
+  authorization: t.unknown,
   verb: t.literal("get"),
   object: t.union([
     OutboxNameCodec,
@@ -213,10 +215,11 @@ class DefaultActorConfig {
     private logger = DefaultLogger(),
     private kv: Map<string, unknown>,
     private outboxRepo: OutboxRepository,
+    public authorizer: Authorizer = () => false,
     public getter: Getter = new OutboxGetter(
       logger,
       kv,
-      new OutboxGetHandler(outboxRepo)
+      new OutboxGetHandler(outboxRepo, authorizer)
     ),
     public finish: Finisher = DefaultFinish(),
     public log: DebugLoggerFunction = DefaultLogger(),

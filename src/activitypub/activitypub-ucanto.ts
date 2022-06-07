@@ -39,6 +39,7 @@ export type {
 } from "../activitypub-inbox/inbox.js";
 export type { OutboxGet, OutboxPost } from "../activitypub-outbox/outbox.js";
 import {
+  Authorizer,
   OutboxGet,
   OutboxGetHandler,
   OutboxPost,
@@ -109,9 +110,16 @@ class _ActivityPubUcanto {
   public get outbox(): OutboxUcanto {
     // get outbox
     const get: OutboxGetUcantoHandler = async (_invocation) => {
+      /** @todo: replace with ucanto-aware authorizer */
+      const stubbedAuthorizer: Authorizer<Invocation<OutboxGetUcanto>> = (
+        _invocation
+      ) => true;
       const value: OutboxGet["Response"] = await new OutboxGetHandler(
-        this.getOutboxRepository()
-      ).handle({});
+        this.getOutboxRepository(),
+        stubbedAuthorizer
+      ).handle({
+        authorization: _invocation,
+      });
       return { ok: true, value };
     };
     // post to outbox
