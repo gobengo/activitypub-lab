@@ -1,6 +1,6 @@
 import { RequestListener } from "http";
 import Koa from "koa";
-import { Parser, Response, Route, URL, route, router } from "typera-koa";
+import { Parser, Route, URL, route, router, Response } from "typera-koa";
 import * as t from "io-ts";
 import bodyParser from "koa-bodyparser";
 import {
@@ -9,24 +9,29 @@ import {
   OutboxRepository,
   OutboxItem,
   OutboxGetHandler,
+  OutboxGet,
 } from "./outbox.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 import type { AnnounceActivityPubCom } from "../activitypub/announcement";
-import { BadRequest } from "typera-koa/response";
-
-type Outbox = {
-  name: string;
-  totalItems: number;
-};
 
 const activities: OutboxRepository = new ArrayRepository<OutboxItem>();
 
-const outboxGetRoute: Route<Response.Ok<Outbox>> = route
+const outboxGetRoute: Route<
+  Response.Response<
+    OutboxGet["Response"]["status"],
+    OutboxGet["Response"],
+    undefined
+  >
+> = route
   .get("/") // Capture id from the path
   .handler(async (request) => {
     const handler = new OutboxGetHandler(activities);
     const response = await handler.handle(request);
-    return Response.ok(response);
+    return {
+      status: response.status,
+      body: response,
+      headers: undefined,
+    };
   });
 
 export const announceActivityPubActivityType = t.type({
@@ -37,7 +42,7 @@ export const announceActivityPubActivityType = t.type({
 });
 
 const outboxPostRoute: Route<
-  | BadRequest<string, undefined>
+  | Response.BadRequest<string, undefined>
   | Response.Created<OutboxPost["Response"], { location: string }>
 > = route
   .post("/") // Capture id from the path

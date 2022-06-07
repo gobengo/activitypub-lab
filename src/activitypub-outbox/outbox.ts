@@ -57,14 +57,22 @@ export type OutboxPost = {
   };
 };
 
+type Outbox = {
+  name: "outbox";
+  status: 200;
+  totalItems: number;
+};
+
+type NotAuthorizedError = {
+  name: "NotAuthorizedError";
+  status: 401;
+};
+
 /** https://www.w3.org/TR/activitypub/#outbox */
 export type OutboxGet = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   Request: {};
-  Response: {
-    name: string;
-    totalItems: number;
-  };
+  Response: Outbox | NotAuthorizedError;
 };
 
 /** type of Activity that can be in outbox */
@@ -78,10 +86,13 @@ export type OutboxItem =
  */
 export class OutboxGetHandler implements ServiceMethodHandler<OutboxGet> {
   constructor(private outboxRepo: OutboxRepository) {}
-  async handle(_request: OutboxGet["Request"]) {
+  async handle(_request: OutboxGet["Request"]): Promise<OutboxGet["Response"]> {
+    return this.notAuthorizedResponse();
+  }
+  protected notAuthorizedResponse(): NotAuthorizedError {
     return {
-      name: "outbox",
-      totalItems: await this.outboxRepo.count(),
+      name: "NotAuthorizedError",
+      status: 401 as const,
     };
   }
 }

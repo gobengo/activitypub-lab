@@ -30,7 +30,7 @@ await act({
             {
                 "type": "object",
                 "properties": {
-                    "name": { "const": "NotFoundError" },
+                    "name": { "const": "NotAuthorizedError" },
                     "status": { "const": 401 },
                 },
                 "required": ["name", "status"]
