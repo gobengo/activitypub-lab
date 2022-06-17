@@ -37,6 +37,7 @@ Get capability to get collection. call it getOutboxCapability
 
 ```javascript
 await act({
+    "id": "urn:uuid:692ae285-27c4-418b-a045-0a3048b259a0",
     "verb": "get",
     "object": {
         "type": "outbox/capabilities/get",
@@ -69,13 +70,37 @@ await act({
 })
 ```
 
+Try to get outbox with bad authorization. Expect NotAuthorizedError
+
+```javascript
+await act({
+    "id": "urn:uuid:067cb075-338f-4b86-adbb-ea7216d00836",
+    "verb": "get",
+    "object": "outbox",
+    "authorization": "this should be rejected bcuz i made it up",
+    "expectation": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "oneOf": [
+            {
+                "type": "object",
+                "properties": {
+                    "name": { "const": "NotAuthorizedError" },
+                    "status": { "const": 401 },
+                },
+                "required": ["name", "status"]
+            }
+        ]
+    },
+});
+```
+
 Invoke getOutboxCapability to get outbox. call it outbox
 
 ```javascript
 await act({
     "verb": "get",
     "object": "outbox",
-    "authorization": { "name": "getOutboxCapability" },
+    "authorization": { "type": "RequireKvRewrite", "name": "getOutboxCapability" },
     "id": "urn:uuid:02c26a1d-b25e-4cce-9bbe-9617bc22fbf5",
     "prev": "urn:uuid:6e9d2a4b-ac1d-4fb9-a059-efcec9343dbe",
     "result": { "name": "outbox" },
@@ -83,9 +108,10 @@ await act({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "properties": {
+            "status": { "const": 200 },
             "totalItems": { "const": 0 },
         },
-        "required": ["totalItems"],
+        "required": ["status", "totalItems"],
     }
 })
 ```

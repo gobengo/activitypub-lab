@@ -3,21 +3,16 @@ import {
   Authorizer,
   MemoryOutboxRepository,
   OutboxGetHandler,
-  OutboxItem,
   OutboxPostHandler,
   OutboxRepository,
 } from "../activitypub-outbox/outbox.js";
-import { ArrayRepository } from "../activitypub/repository-array.js";
 import { hasOwnProperty } from "../object.js";
 import decodeWith from "./decodeWith.js";
 import Ajv, { JSONSchemaType } from "ajv";
 import { v4 as uuidv4 } from "uuid";
-import Ajv2020 from "ajv/dist/core.js";
-import { string } from "fp-ts";
 import * as assert from "assert";
 import { DebugLoggerFunction } from "util";
 import { ConsoleLog, DefaultLogger, JSONLogger } from "../log.js";
-import { ServiceMethodHandler } from "../activitypub/handler.js";
 
 const ajv = new Ajv();
 
@@ -228,7 +223,8 @@ class DefaultActorConfig {
     private logger = DefaultLogger(),
     private kv: Map<string, unknown>,
     private outboxRepo: OutboxRepository,
-    public authorizer: Authorizer = () => false,
+    /** @todo use a better authorizer than deny-all */
+    public authorizer: Authorizer = () => true,
     public getter: Getter = new OutboxGetter(
       logger,
       kv,
@@ -243,6 +239,30 @@ class DefaultActorConfig {
   ) {}
 }
 
+/**
+ * Create a function that will rewrite a property of an input value to be a value read from a kv store
+ * @param kv - kv store
+ * @param propName - property of input object to rewrite
+ * @returns - function that will rewrite a property of an input object
+ */
+function rewriterAuthorizationFromKv(kv: Map<string, string|object>) {
+  return <T extends { authorization: object }>(object: T): T => {
+    const initialValue = object["authorization"];
+    if ( ! initialValue) { return object }
+    if ( typeof initialValue !== 'object') { return object }
+    if (hasOwnProperty(initialValue, 'type') && initialValue.type === "RequireKvRewrite") {
+      assert.ok(hasOwnProperty(initialValue, 'name'))
+      assert.ok(typeof initialValue.name === "string")
+      const updatedObject = {
+        ...object,
+        authorization: kv.get(initialValue.name)
+      }
+      return updatedObject;
+    }
+    return object
+  }
+}
+
 export const actor = (
   _logger = JSONLogger(ConsoleLog()),
   kv = new Map<string, string | object>(),
@@ -251,7 +271,16 @@ export const actor = (
 ): Actor<unknown> => {
   return {
     async act(_activity) {
-      const request = ensureId(_activity as Record<string, unknown>);
+      let request = _activity;
+      const requestWithId = ensureId(request as Record<string, unknown>);
+      if ((hasOwnProperty(requestWithId, 'authorization') && (typeof requestWithId.authorization === 'object') && requestWithId.authorization)) {
+        const authorization = requestWithId.authorization;
+        const requestWithRewrittenAuthorization = rewriterAuthorizationFromKv(kv)({
+          ...requestWithId,
+          authorization,
+        });
+        request = requestWithRewrittenAuthorization;
+      }
       config.log("debug", {
         type: "request",
         request,
@@ -305,7 +334,6 @@ export const actor = (
       } else {
         throw new Error("activity with no .verb");
       }
-
       /**
        * If the request.result.name is set, it indicates that the result of the request (ie the response) should be saved in kv as key=request.result.name
        */
@@ -322,6 +350,7 @@ export const actor = (
         config.log("debug", { verb: "kv/set", name: kvName, value: response });
         kv.set(kvName, response);
       }
+
 
       /**
        * If request.expectation is set, it may be a schema to validate the response with
