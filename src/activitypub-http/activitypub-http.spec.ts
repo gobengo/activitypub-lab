@@ -3,8 +3,8 @@ import { universalFetch } from "../fetch.js";
 import { withHttpServer } from "../http.js";
 import * as assert from "assert";
 import { RequestListener } from "http";
-import { InboxTester } from "../activitypub-http-test/inbox-tester.js";
-import { InboxGetRequest } from "../activitypub-inbox/inbox.js";
+import { test as testActivityPub } from "../activitypub-http-test/tester.js";
+import { HttpActivityPubController } from "./controller-http.js";
 
 const HttpActivityPub = Object.assign(
   (): RequestListener => {
@@ -36,17 +36,9 @@ describe("activitypub-http", () => {
       );
     });
   });
-  it("can be tested with InboxTester", async () => {
+  it("can be tested with ActivityPubTester", async () => {
     await withHttpServer(HttpActivityPub(), async (baseUrl) => {
-      const inboxUrl = new URL('/inbox', baseUrl)
-      const getInbox = async (_req: InboxGetRequest) => {
-        return (await universalFetch(inboxUrl.toString())).json()
-      }
-      const tester = new InboxTester(
-        assert,
-        getInbox,
-      )
-      await tester.testGetInbox();
-    })
-  })
+      await testActivityPub(new HttpActivityPubController(baseUrl));
+    });
+  });
 });

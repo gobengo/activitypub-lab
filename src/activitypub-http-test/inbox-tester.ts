@@ -1,4 +1,5 @@
-import * as assertModule from "assert";
+import * as assert from "assert";
+import { InboxController } from "../activitypub-http/controller";
 import { InboxGetRequest, InboxGetResponse } from "../activitypub-inbox/inbox";
 
 /**
@@ -6,13 +7,7 @@ import { InboxGetRequest, InboxGetResponse } from "../activitypub-inbox/inbox";
  * The goal is to be able to use this to test ap:inbox over any number of protocols
  * because e.g. the `getInbox` method is pluggable.
  */
-export class InboxTester {
-    constructor(
-        private assert: typeof assertModule,
-        private getInbox: (req: InboxGetRequest) => Promise<InboxGetResponse>,
-    ) {}
-    async testGetInbox() {
-        const inbox = await this.getInbox({});
-        this.assert.equal(typeof inbox.totalItems, 'number');
-    }
-}
+export const test = async ({ get }: InboxController) => {
+  const inbox = await get({});
+  assert.equal(typeof inbox.totalItems, "number");
+};
