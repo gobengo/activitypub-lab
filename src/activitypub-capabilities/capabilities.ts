@@ -245,22 +245,29 @@ class DefaultActorConfig {
  * @param propName - property of input object to rewrite
  * @returns - function that will rewrite a property of an input object
  */
-function rewriterAuthorizationFromKv(kv: Map<string, string|object>) {
+function rewriterAuthorizationFromKv(kv: Map<string, string | object>) {
   return <T extends { authorization: object }>(object: T): T => {
     const initialValue = object["authorization"];
-    if ( ! initialValue) { return object }
-    if ( typeof initialValue !== 'object') { return object }
-    if (hasOwnProperty(initialValue, 'type') && initialValue.type === "RequireKvRewrite") {
-      assert.ok(hasOwnProperty(initialValue, 'name'))
-      assert.ok(typeof initialValue.name === "string")
+    if (!initialValue) {
+      return object;
+    }
+    if (typeof initialValue !== "object") {
+      return object;
+    }
+    if (
+      hasOwnProperty(initialValue, "type") &&
+      initialValue.type === "RequireKvRewrite"
+    ) {
+      assert.ok(hasOwnProperty(initialValue, "name"));
+      assert.ok(typeof initialValue.name === "string");
       const updatedObject = {
         ...object,
-        authorization: kv.get(initialValue.name)
-      }
+        authorization: kv.get(initialValue.name),
+      };
       return updatedObject;
     }
-    return object
-  }
+    return object;
+  };
 }
 
 export const actor = (
@@ -273,9 +280,15 @@ export const actor = (
     async act(_activity) {
       let request = _activity;
       const requestWithId = ensureId(request as Record<string, unknown>);
-      if ((hasOwnProperty(requestWithId, 'authorization') && (typeof requestWithId.authorization === 'object') && requestWithId.authorization)) {
+      if (
+        hasOwnProperty(requestWithId, "authorization") &&
+        typeof requestWithId.authorization === "object" &&
+        requestWithId.authorization
+      ) {
         const authorization = requestWithId.authorization;
-        const requestWithRewrittenAuthorization = rewriterAuthorizationFromKv(kv)({
+        const requestWithRewrittenAuthorization = rewriterAuthorizationFromKv(
+          kv
+        )({
           ...requestWithId,
           authorization,
         });
@@ -350,7 +363,6 @@ export const actor = (
         config.log("debug", { verb: "kv/set", name: kvName, value: response });
         kv.set(kvName, response);
       }
-
 
       /**
        * If request.expectation is set, it may be a schema to validate the response with
