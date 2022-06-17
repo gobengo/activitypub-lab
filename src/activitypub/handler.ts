@@ -13,3 +13,10 @@ export type ServiceMethodHandler<M> = M extends ServiceMethod<
 >
   ? Handler<Request, Response>
   : never;
+
+export type ServiceMethodFunction<M> = M extends ServiceMethod<
+  infer Request,
+  infer Response
+>
+  ? (request: Request) => Promise<Response>
+  : never;

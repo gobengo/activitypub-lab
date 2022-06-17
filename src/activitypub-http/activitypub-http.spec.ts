@@ -10,7 +10,13 @@ const HttpActivityPub = Object.assign(
   (): RequestListener => {
     return (_req, _res) => {
       _res.writeHead(200);
-      _res.end(JSON.stringify({ message: "activitypub", totalItems: 0 }));
+      _res.end(
+        JSON.stringify({
+          name: "outbox",
+          message: "activitypub",
+          totalItems: 0,
+        })
+      );
     };
   },
   {
