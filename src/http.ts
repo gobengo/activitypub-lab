@@ -3,7 +3,7 @@ import type { AddressInfo } from "net";
 
 export async function withHttpServer(
   listener: nodeHttp.RequestListener,
-  useServer: (baseUrl: URL) => Promise<void>
+  useServer: (baseUrl: URL) => Promise<void>|void
 ) {
   const httpServer = nodeHttp.createServer(listener);
   await new Promise((resolve, _reject) => {

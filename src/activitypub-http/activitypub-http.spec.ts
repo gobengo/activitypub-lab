@@ -3,12 +3,14 @@ import { universalFetch } from "../fetch.js";
 import { withHttpServer } from "../http.js";
 import * as assert from "assert";
 import { RequestListener } from "http";
+import { InboxTester } from "../activitypub-http-test/inbox-tester.js";
+import { InboxGetRequest } from "../activitypub-inbox/inbox.js";
 
 const HttpActivityPub = Object.assign(
   (): RequestListener => {
     return (_req, _res) => {
       _res.writeHead(200);
-      _res.end(JSON.stringify({ message: "activitypub" }));
+      _res.end(JSON.stringify({ message: "activitypub", totalItems: 0 }));
     };
   },
   {
@@ -34,4 +36,17 @@ describe("activitypub-http", () => {
       );
     });
   });
+  it("can be tested with InboxTester", async () => {
+    await withHttpServer(HttpActivityPub(), async (baseUrl) => {
+      const inboxUrl = new URL('/inbox', baseUrl)
+      const getInbox = async (_req: InboxGetRequest) => {
+        return (await universalFetch(inboxUrl.toString())).json()
+      }
+      const tester = new InboxTester(
+        assert,
+        getInbox,
+      )
+      await tester.testGetInbox();
+    })
+  })
 });
