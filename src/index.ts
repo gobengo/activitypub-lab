@@ -17,4 +17,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 export * as activitypub from "./activitypub/activitypub.js";
 
 /** ActivityPub implementation using ucanto */
-export * as ActivityPubUcanto from "./activitypub/activitypub-ucanto";
+export * as ActivityPubUcanto from "./activitypub/activitypub-ucanto.js";
