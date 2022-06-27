@@ -11,19 +11,26 @@ test("can federate", async () => {
   const console = createTestConsole();
   const actor1 = createActivityPubActor(console);
   const actor2 = createActivityPubActor(console);
-  const activity = deriveActivity(createAnnounceActivityPubCom(), {
+  const activity = {
+    ...createAnnounceActivityPubCom(),
     id: createRandomIdentifier(),
+    attributedTo: actor1,
     cc: [actor2],
-  });
-  // ap1 posts an activity ccing ap2
+  };
+  // actor1 posts an activity ccing actor2
   await actor1.outbox.post(activity);
-  const ap2Inbox = await actor2.inbox.get({});
-  assert.equal(ap2Inbox.totalItems, 1);
-  assert.equal(ap2Inbox.items[0].id, activity.id);
-  // ap2 replies to that post
+  const a2Inbox = await actor2.inbox.get({});
+  assert.equal(a2Inbox.totalItems, 1);
+  assert.equal(a2Inbox.items[0].id, activity.id);
+  // actor1's inbox shouldn't have been modified (only a2Inbox)
+  assert.equal((await actor1.inbox.get({})).totalItems, 0);
+  // actor2 replies to that post
   const reply = deriveActivity({
     id: createRandomIdentifier(),
-    inReplyTo: activity.id,
+    inReplyTo: activity,
   });
   await actor2.outbox.post(reply);
+  const a1Inbox = await actor1.inbox.get({});
+  assert.equal(a1Inbox.totalItems, 1);
+  assert.equal(a1Inbox.items[0].id, reply.id);
 });

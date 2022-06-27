@@ -18,11 +18,12 @@ type InboxPostable = {
   };
 };
 
-export type ActivityAudienceTarget = InboxPostable | Identifier;
+export type ActivityDeliveryTarget = InboxPostable | Identifier;
 
 export type OptionalActivityProperties = {
-  cc: ActivityAudienceTarget[];
-  inReplyTo: Identifier;
+  attributedTo: Identifier | InboxPostable;
+  cc: ActivityDeliveryTarget[];
+  inReplyTo: Identifier | { attributedTo: InboxPostable };
 };
 
 export type Activity = {
@@ -33,12 +34,12 @@ export type Activity = {
 export const deriveActivity = <T extends Partial<Activity>>(
   base: T,
   overlay: Partial<Activity> = {}
-): T & Activity => {
+) => {
   const activity = {
-    "@context": "https://www.w3.org/ns/activitystreams",
+    "@context": "https://www.w3.org/ns/activitystreams" as const,
     ...base,
     id: base.id ?? createRandomIdentifier(),
-    cc: [...array(base.cc), ...(overlay.cc || [])],
+    cc: [...array(base.cc ?? []), ...(overlay.cc ?? [])],
   };
   return activity;
 };

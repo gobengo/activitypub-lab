@@ -1,6 +1,6 @@
 import {
   Activity,
-  ActivityAudienceTarget,
+  ActivityDeliveryTarget,
   array,
 } from "../activity/activity.js";
 import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
@@ -133,11 +133,11 @@ export class OutboxGetHandler<Authorization = unknown>
 }
 
 type DeliveryResult =
-  | { delivered: true; target: ActivityAudienceTarget }
+  | { delivered: true; target: ActivityDeliveryTarget }
   | { delivered: false; reason: unknown };
 
 const deliverToTarget = async (
-  target: ActivityAudienceTarget,
+  target: ActivityDeliveryTarget,
   activity: Activity
 ): Promise<DeliveryResult> => {
   if (typeof target === "string") {
@@ -154,8 +154,23 @@ type DeliverActivity = (activity: Activity) => Promise<{
   deliveries: DeliveryResult[];
 }>;
 
+const getInReplyToDeliveryTargets = (
+  inReplyTo: Activity["inReplyTo"]
+): ActivityDeliveryTarget[] => {
+  if (typeof inReplyTo === "undefined") {
+    return [];
+  }
+  if (typeof inReplyTo === "string") {
+    return [inReplyTo];
+  }
+  return [inReplyTo.attributedTo];
+};
+
 const deliverActivity: DeliverActivity = async (activity) => {
-  const targets = [...array(activity.cc ?? [])];
+  const targets: ActivityDeliveryTarget[] = [
+    ...array(activity.cc ?? []),
+    ...array(activity.inReplyTo ?? []).flatMap(getInReplyToDeliveryTargets),
+  ];
   const deliveries = (
     await Promise.allSettled(
       targets.map(async (target) => {

@@ -1,3 +1,4 @@
+import { Activity } from "../activity/activity.js";
 import {
   ActivityPubController,
   InboxController,
@@ -15,28 +16,29 @@ import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 
 export const createActivityPubActor = (
-  console: Console
+  console: Console,
+  inboxRepository = new ArrayRepository<Activity>(),
+  outboxRepository = new ArrayRepository<Activity>()
 ): ActivityPubController => {
-  const repo = new ArrayRepository<KnownActivitypubActivity>();
   const authorizer = () => {
     console.warn("@todo: replace createActivityPub noop authorizer");
     return true;
   };
   const inbox: InboxController = {
     get: async (request) => {
-      return new InboxGetHandler(repo, console).handle(request);
+      return new InboxGetHandler(inboxRepository, console).handle(request);
     },
     post: async (request) => {
-      return new InboxPostHandler(repo, console).handle(request);
+      return new InboxPostHandler(inboxRepository, console).handle(request);
     },
   };
   const outbox: OutboxController = {
     get: async (request) => {
-      return new OutboxGetHandler(repo, authorizer).handle(request);
+      return new OutboxGetHandler(outboxRepository, authorizer).handle(request);
     },
     post: async (request) => {
       console.debug("activitypub.outbox.post", request);
-      return new OutboxPostHandler(repo).handle(request);
+      return new OutboxPostHandler(outboxRepository).handle(request);
     },
   };
   return { inbox, outbox };
