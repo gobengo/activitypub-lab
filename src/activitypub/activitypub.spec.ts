@@ -3,19 +3,14 @@ import {
   createRandomIdentifier,
   deriveActivity,
 } from "../activity/activity.js";
-import { ActivityPubController } from "../activitypub-http/controller.js";
-import { OutboxPost } from "../activitypub-outbox/outbox.js";
+import { createActivityPubActor } from "../activitypub-actor/activitypub-actor.js";
 import { createTestConsole, test } from "../test.js";
-import { createActivityPub } from "./activitypub.js";
-import {
-  AnnounceActivityPubCom,
-  createAnnounceActivityPubCom,
-} from "./announcement.js";
+import { createAnnounceActivityPubCom } from "./announcement.js";
 
 test("can federate", async () => {
   const console = createTestConsole();
-  const actor1 = createActivityPub(console);
-  const actor2 = createActivityPub(console);
+  const actor1 = createActivityPubActor(console);
+  const actor2 = createActivityPubActor(console);
   const activity = deriveActivity(createAnnounceActivityPubCom(), {
     id: createRandomIdentifier(),
     cc: [actor2],
