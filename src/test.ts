@@ -1,1 +1,1 @@
-export { describe, it } from "mocha";
+export { describe, it, test } from "mocha";
