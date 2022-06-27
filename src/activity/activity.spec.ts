@@ -7,5 +7,5 @@ test("can deriveActivity to add cc", () => {
   const base = createAnnounceActivityPubCom();
   const ccTarget = "did:web:bengo.is";
   const created = deriveActivity(base, { cc: [ccTarget] });
-  assert.ok(created.cc.includes(ccTarget));
+  assert.ok(created.cc?.includes(ccTarget));
 });

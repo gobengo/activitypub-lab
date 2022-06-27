@@ -2,6 +2,7 @@ import {
   InboxGetRequest,
   InboxGetResponse,
   InboxPostableActivity,
+  InboxPostHandler,
   InboxPostResponse,
 } from "../activitypub-inbox/inbox.js";
 import type { DID } from "@ipld/dag-ucan/src/ucan";
@@ -19,12 +20,15 @@ export { Invocation, Capability } from "ucanto/src/client";
  * It exposes an interface of methods which handle ucanto Invocations
  * @category activitypub-ucanto
  */
-export function ActivityPubUcanto(): ActivityPubUcantoAbstraction {
+export function ActivityPubUcanto(
+  console: Console
+): ActivityPubUcantoAbstraction {
   const inboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   const outboxRepository = new ArrayRepository<KnownActivitypubActivity>();
   return new _ActivityPubUcanto(
     () => inboxRepository,
-    () => outboxRepository
+    () => outboxRepository,
+    console
   );
 }
 
@@ -101,7 +105,8 @@ class _ActivityPubUcanto {
   // public inbox: InboxUcanto;
   constructor(
     private getInboxRepository: () => ArrayRepository<AnnounceActivityPubCom>,
-    private getOutboxRepository: () => ArrayRepository<AnnounceActivityPubCom>
+    private getOutboxRepository: () => ArrayRepository<AnnounceActivityPubCom>,
+    private console: Console
   ) {}
   public did(): DID {
     return "did:web:activitypub.com";
@@ -142,11 +147,11 @@ class _ActivityPubUcanto {
     // post to inbox
     const post: InboxPostUcantoHandler = async (_invocation) => {
       const { activity } = _invocation.capability;
-      await this.getInboxRepository().push(activity);
-      const value: InboxPostResponse = {
-        posted: true,
-      };
-      return { ok: true, value };
+      const response = await new InboxPostHandler(
+        this.getInboxRepository(),
+        this.console
+      ).handle(activity);
+      return { ok: true, value: response };
     };
     return { get, post };
   }

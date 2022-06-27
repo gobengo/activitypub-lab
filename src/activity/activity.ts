@@ -1,11 +1,11 @@
-import { InboxPost } from "../activitypub-inbox/inbox.js";
+import { InboxPostFunction } from "../activitypub-inbox/inbox.js";
 import { v4 as uuidv4 } from "uuid";
 
 type UriPrefix = "did" | "urn:uuid";
 type URI = `${UriPrefix}:${string}`;
 export type Identifier = URI;
 
-const toArray = <T>(input: T | T[]): T[] => {
+export const array = <T>(input: T | T[]): T[] => {
   if (typeof input === "undefined") {
     return [];
   }
@@ -14,18 +14,23 @@ const toArray = <T>(input: T | T[]): T[] => {
 
 type InboxPostable = {
   inbox: {
-    post: InboxPost;
+    post: InboxPostFunction;
   };
 };
+
+export type ActivityAudienceTarget = InboxPostable | Identifier;
 
 export type ActivityOverlay = {
   cc?: Array<InboxPostable | Identifier>;
 };
 
+export type OptionalActivityProperties = {
+  cc: ActivityAudienceTarget[];
+};
+
 export type Activity = {
   id: URI;
-  cc: Array<InboxPostable | Identifier>;
-};
+} & Partial<OptionalActivityProperties>;
 
 export const deriveActivity = <T extends Partial<Activity>>(
   base: T,
@@ -34,7 +39,7 @@ export const deriveActivity = <T extends Partial<Activity>>(
   const activity = {
     id: base.id ?? createRandomIdentifier(),
     ...base,
-    cc: [...toArray(base.cc), ...(overlay.cc || [])],
+    cc: [...array(base.cc), ...(overlay.cc || [])],
   };
   return activity;
 };

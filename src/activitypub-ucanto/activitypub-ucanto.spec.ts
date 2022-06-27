@@ -4,6 +4,7 @@ import * as Issuer from "../ucanto-actor/issuer.js";
 import { ActivityPubUcanto } from "./activitypub-ucanto.js";
 import { Agent } from "ucanto/src/api";
 import { createAnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { createTestConsole } from "../test.js";
 
 async function exampleInboxGet(
   activitypub: ReturnType<typeof ActivityPubUcanto>,
@@ -83,7 +84,7 @@ async function examplePost(
 describe("activitypub-ucanto", () => {
   it("has apparently functional inbox", async () => {
     const alice = await Issuer.generate();
-    const activitypub = ActivityPubUcanto();
+    const activitypub = ActivityPubUcanto(createTestConsole());
     const postIntentions = new Array(3);
     for (const _i of postIntentions) {
       await examplePost(activitypub, "inbox", alice);
@@ -93,7 +94,7 @@ describe("activitypub-ucanto", () => {
   });
   it("has apparently functional outbox", async () => {
     const alice = await Issuer.generate();
-    const activitypub = ActivityPubUcanto();
+    const activitypub = ActivityPubUcanto(createTestConsole());
     const outboxIntentions = new Array(3);
     for (const _i of outboxIntentions) {
       await examplePost(activitypub, "outbox", alice);

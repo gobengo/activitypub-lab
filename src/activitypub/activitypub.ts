@@ -3,6 +3,7 @@ import {
   InboxController,
   OutboxController,
 } from "../activitypub-http/controller.js";
+import { InboxPostHandler } from "../activitypub-inbox/inbox.js";
 import {
   OutboxGetHandler,
   OutboxPostHandler,
@@ -27,7 +28,7 @@ export * as announcement from "./announcement.js";
 
 export type KnownActivitypubActivity = AnnounceActivityPubCom;
 
-export const createActivityPub = (): ActivityPubController => {
+export const createActivityPub = (console: Console): ActivityPubController => {
   const repo = new ArrayRepository<KnownActivitypubActivity>();
   const authorizer = () => {
     console.warn("@todo: replace createActivityPub noop authorizer");
@@ -36,13 +37,11 @@ export const createActivityPub = (): ActivityPubController => {
   const inbox: InboxController = {
     get: async () => {
       return {
-        totalItems: 0,
+        totalItems: await repo.count(),
       };
     },
-    post: async (_request) => {
-      return {
-        posted: true,
-      };
+    post: async (request) => {
+      return new InboxPostHandler(repo, console).handle(request);
     },
   };
   const outbox: OutboxController = {
@@ -50,6 +49,7 @@ export const createActivityPub = (): ActivityPubController => {
       return new OutboxGetHandler(repo, authorizer).handle(request);
     },
     post: async (request) => {
+      console.debug("activitypub.outbox.post", request);
       return new OutboxPostHandler(repo).handle(request);
     },
   };

@@ -1,3 +1,8 @@
+import {
+  Activity,
+  ActivityAudienceTarget,
+  array,
+} from "../activity/activity.js";
 import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
 import { AnnounceActivityPubCom } from "../activitypub/announcement";
 import { ServiceMethodHandler, ServiceMethod } from "../activitypub/handler.js";
@@ -129,17 +134,74 @@ export class OutboxGetHandler<Authorization = unknown>
   }
 }
 
+type DeliveryResult =
+  | { delivered: true; target: ActivityAudienceTarget }
+  | { delivered: false; reason: unknown };
+
+const deliverToTarget = async (
+  target: ActivityAudienceTarget,
+  activity: Activity
+): Promise<DeliveryResult> => {
+  if (typeof target === "string") {
+    throw new Error("deliverToTarget cannot deliver to string targets");
+  }
+  const inboxPostResponse = await target.inbox.post(activity);
+  return {
+    target,
+    delivered: inboxPostResponse.posted,
+  };
+};
+
+type DeliverActivity = (activity: Activity) => Promise<{
+  deliveries: DeliveryResult[];
+}>;
+
+const deliverActivity: DeliverActivity = async (activity) => {
+  const targets = [...array(activity.cc ?? [])];
+  const deliveries = (
+    await Promise.allSettled(
+      targets.map(async (target) => {
+        const result = await deliverToTarget(target, activity);
+        return result;
+      })
+    )
+  ).map((settledResult): DeliveryResult => {
+    switch (settledResult.status) {
+      case "rejected":
+        return { delivered: false, reason: settledResult.reason };
+      case "fulfilled":
+        return settledResult.value;
+      default:
+        const _never: never = settledResult;
+        throw new Error("unexpected settledResult.status");
+    }
+  });
+  return { deliveries };
+};
+
 /**
  * ActivityPub handler for POST outbox.
  * This is invoked when a client publishes an activity to a server.
  */
 export class OutboxPostHandler implements ServiceMethodHandler<OutboxPost> {
-  constructor(private outboxRepo: OutboxRepository) {}
-  async handle(_request: OutboxPost["Request"]) {
-    await this.outboxRepo.push(_request);
+  constructor(
+    private outboxRepo: OutboxRepository,
+    private deliver = deliverActivity
+  ) {}
+  async handle(request: OutboxPost["Request"]) {
+    await this.outboxRepo.push(request);
+    const activity = this.readActivity(request);
+    await this.deliver(activity);
     return {
       posted: true as const,
       status: 201 as const,
     };
+  }
+  protected readActivity(request: OutboxPost["Request"]): Activity {
+    switch (request["@context"]) {
+      case "https://example.org/zcap/v1":
+        return request.action;
+    }
+    return request;
   }
 }
