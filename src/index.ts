@@ -3,7 +3,7 @@ import process from "process";
 
 const main = async () => {
   /** @todo make it run an activitypub server */
-}
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
