@@ -22,3 +22,7 @@ export type InboxPostResponse = {
 
 /** type that inbox contains */
 export type InboxItem = InboxPostableActivity;
+
+export type InboxPost = (
+  request: InboxPostRequest
+) => Promise<InboxPostResponse>;

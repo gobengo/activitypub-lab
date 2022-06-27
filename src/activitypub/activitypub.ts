@@ -27,11 +27,23 @@ export * as announcement from "./announcement.js";
 
 export type KnownActivitypubActivity = AnnounceActivityPubCom;
 
-export const createActivityPub = (): Pick<ActivityPubController, "outbox"> => {
+export const createActivityPub = (): ActivityPubController => {
   const repo = new ArrayRepository<KnownActivitypubActivity>();
   const authorizer = () => {
     console.warn("@todo: replace createActivityPub noop authorizer");
     return true;
+  };
+  const inbox: InboxController = {
+    get: async () => {
+      return {
+        totalItems: 0,
+      };
+    },
+    post: async (_request) => {
+      return {
+        posted: true,
+      };
+    },
   };
   const outbox: OutboxController = {
     get: async (request) => {
@@ -41,5 +53,5 @@ export const createActivityPub = (): Pick<ActivityPubController, "outbox"> => {
       return new OutboxPostHandler(repo).handle(request);
     },
   };
-  return { outbox };
+  return { inbox, outbox };
 };

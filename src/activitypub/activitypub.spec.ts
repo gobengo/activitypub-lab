@@ -8,12 +8,11 @@ import {
   createAnnounceActivityPubCom,
 } from "./announcement.js";
 
-// test('can federate across two activitypubs', () => {
-//     const ap1 = createActivityPub()
-//     const ap2 = createActivityPub()
-//     const announce = createAnnounceActivityPubCom()
-//     const postAnnounce: OutboxPost['Request'] = announce;
-//     ap1.outbox.post(deriveActivity(createAnnounceActivityPubCom(), {
-//         cc: [ap2]
-//     }))
-// })
+test("can federate across two activitypubs", () => {
+  const ap1 = createActivityPub();
+  const ap2 = createActivityPub();
+  const announcement = deriveActivity(createAnnounceActivityPubCom(), {
+    cc: [ap2],
+  });
+  // ap1.outbox.post()
+});

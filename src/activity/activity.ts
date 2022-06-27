@@ -1,3 +1,5 @@
+import { InboxPost } from "../activitypub-inbox/inbox.js";
+
 type UriScheme = "did";
 type URI = `${UriScheme}:${string}`;
 type Identifier = URI;
@@ -9,8 +11,14 @@ const toArray = <T>(input: T | T[]): T[] => {
   return Array.isArray(input) ? input : [input];
 };
 
+type InboxPostable = {
+  inbox: {
+    post: InboxPost;
+  };
+};
+
 export type ActivityOverlay = {
-  cc?: Array<Identifier>;
+  cc?: Array<InboxPostable | Identifier>;
 };
 
 export const deriveActivity = (
