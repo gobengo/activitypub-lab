@@ -14,6 +14,7 @@ import {
 } from "./outbox.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 import type { AnnounceActivityPubCom } from "../activitypub/announcement";
+import { Identifier } from "../activity/activity.js";
 
 const defaultOutboxRepository: OutboxRepository =
   new ArrayRepository<OutboxItem>();
@@ -61,7 +62,14 @@ const outboxPostRoute: Route<
   .use(Parser.body(announceActivityPubActivityType))
   .handler(async (request) => {
     const handler = new OutboxPostHandler(defaultOutboxRepository);
-    const reqBody: AnnounceActivityPubCom = request.body;
+    const reqBody: AnnounceActivityPubCom = {
+      ...request.body,
+      /**
+       * @todo - remove type assertion by modifying announceActivityPubActivityType.id
+       * to be mroe specific than t.string
+       */
+      id: request.body.id as Identifier,
+    };
     const response = await handler.handle(reqBody);
     const location = `?id=${reqBody.id}`;
     return Response.created(response, { location });

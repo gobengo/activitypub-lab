@@ -1,8 +1,9 @@
 import { DID } from "@ipld/dag-ucan/src/ucan";
+import { Identifier } from "../activity/activity";
 
 export type AnnounceActivityPubCom = {
   "@context": "https://www.w3.org/ns/activitystreams";
-  id: string;
+  id: Identifier;
   type: "Announce";
   actor: "activitypub.com";
 };
