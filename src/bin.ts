@@ -7,7 +7,7 @@ import { hideBin } from "yargs/helpers";
 import {
   generate as generateIssuer,
   derive as deriveIssuer,
-} from "./actor/issuer.js";
+} from "./ucanto-actor/issuer.js";
 import { CID } from "multiformats";
 import { identity } from "multiformats/hashes/identity";
 import * as Hasher from "multiformats/hashes/hasher";

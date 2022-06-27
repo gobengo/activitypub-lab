@@ -1,6 +1,6 @@
 import { describe, it } from "mocha";
 import * as assert from "assert";
-import * as Issuer from "../actor/issuer.js";
+import * as Issuer from "../ucanto-actor/issuer.js";
 import { ActivityPubUcanto } from "./activitypub-ucanto.js";
 import { Agent } from "ucanto/src/api";
 import { createAnnounceActivityPubCom } from "../activitypub/announcement.js";
