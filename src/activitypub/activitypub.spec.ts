@@ -24,8 +24,10 @@ test("can federate", async () => {
   assert.equal(a2Inbox.items[0].id, activity.id);
   // actor1's inbox shouldn't have been modified (only a2Inbox)
   assert.equal((await actor1.inbox.get({})).totalItems, 0);
+
   // actor2 replies to that post
   const reply = deriveActivity({
+    attributedTo: actor2,
     id: createRandomIdentifier(),
     inReplyTo: activity,
   });
@@ -33,4 +35,16 @@ test("can federate", async () => {
   const a1Inbox = await actor1.inbox.get({});
   assert.equal(a1Inbox.totalItems, 1);
   assert.equal(a1Inbox.items[0].id, reply.id);
+
+  // make an actor3 reply to both `activity` and `reply`
+  const actor3 = createActivityPubActor(console);
+  const replyFrom3 = deriveActivity({
+    inReplyTo: [activity, reply],
+  });
+  await actor2.outbox.post(replyFrom3);
+  // actor1 and actor2 both got it
+  assert.equal((await actor1.inbox.get({})).totalItems, 2);
+  assert.equal((await actor2.inbox.get({})).totalItems, 2);
+  // actor3 didn't get their own thing
+  assert.equal((await actor3.inbox.get({})).totalItems, 0);
 });

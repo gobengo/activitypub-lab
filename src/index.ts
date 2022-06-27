@@ -11,11 +11,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   });
 }
 
-/**
- * @module activitypub-ucanto
- * ActivityPub implemented using ucanto
- */
-
 /** ActivityPub protocol */
 export * as activitypub from "./activitypub/activitypub.js";
 

@@ -20,10 +20,13 @@ type InboxPostable = {
 
 export type ActivityDeliveryTarget = InboxPostable | Identifier;
 
+/** one or more things. item or array of items. */
+type Many<T> = T | T[];
+
 export type OptionalActivityProperties = {
   attributedTo: Identifier | InboxPostable;
   cc: ActivityDeliveryTarget[];
-  inReplyTo: Identifier | { attributedTo: InboxPostable };
+  inReplyTo: Many<Identifier | { attributedTo: InboxPostable }>;
 };
 
 export type Activity = {

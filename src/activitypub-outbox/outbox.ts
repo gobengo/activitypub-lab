@@ -163,7 +163,16 @@ const getInReplyToDeliveryTargets = (
   if (typeof inReplyTo === "string") {
     return [inReplyTo];
   }
-  return [inReplyTo.attributedTo];
+  return array(inReplyTo).flatMap((replyParent) => {
+    if (typeof replyParent === "string") {
+      console.warn(
+        "getInReplyToDeliveryTargets cannot dereference string value. skipping. (@todo)",
+        replyParent
+      );
+      return [];
+    }
+    return array(replyParent.attributedTo);
+  });
 };
 
 const deliverActivity: DeliverActivity = async (activity) => {

@@ -13,7 +13,7 @@ export async function withHttpServer(
   });
   const baseUrl = addressUrl(httpServer.address());
   if (!baseUrl) {
-    throw new Error(`failed to determine baseUrl from ucantoServer`);
+    throw new Error(`failed to determine baseUrl from httpServer`);
   }
   try {
     await useServer(baseUrl);
