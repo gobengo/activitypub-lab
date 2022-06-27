@@ -55,7 +55,7 @@ type CapabilityInvocation<_Request, _Action> = {
 };
 
 /** type of Activity that can be posted to outbox */
-export type OutboxPostableActivity = AnnounceActivityPubCom;
+export type OutboxPostableActivity = AnnounceActivityPubCom | Activity;
 
 type InvokeOutboxPostWithActivity = CapabilityInvocation<
   OutboxPostableActivity,
@@ -95,9 +95,7 @@ export type OutboxGet<Authorization = unknown> = {
 };
 
 /** type of Activity that can be in outbox */
-export type OutboxItem =
-  | KnownActivitypubActivity
-  | InvokeOutboxPostWithActivity;
+export type OutboxItem = OutboxPostableActivity;
 
 /**
  * ActivityPub handler for GET outbox.
@@ -189,8 +187,8 @@ export class OutboxPostHandler implements ServiceMethodHandler<OutboxPost> {
     private deliver = deliverActivity
   ) {}
   async handle(request: OutboxPost["Request"]) {
-    await this.outboxRepo.push(request);
     const activity = this.readActivity(request);
+    await this.outboxRepo.push(activity);
     await this.deliver(activity);
     return {
       posted: true as const,

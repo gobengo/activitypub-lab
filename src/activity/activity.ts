@@ -22,17 +22,20 @@ export type ActivityAudienceTarget = InboxPostable | Identifier;
 
 export type OptionalActivityProperties = {
   cc: ActivityAudienceTarget[];
+  inReplyTo: Identifier;
 };
 
 export type Activity = {
+  "@context": "https://www.w3.org/ns/activitystreams";
   id: URI;
 } & Partial<OptionalActivityProperties>;
 
 export const deriveActivity = <T extends Partial<Activity>>(
   base: T,
-  overlay: Partial<Activity>
+  overlay: Partial<Activity> = {}
 ): T & Activity => {
   const activity = {
+    "@context": "https://www.w3.org/ns/activitystreams",
     ...base,
     id: base.id ?? createRandomIdentifier(),
     cc: [...array(base.cc), ...(overlay.cc || [])],

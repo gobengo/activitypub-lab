@@ -20,4 +20,10 @@ test("can federate", async () => {
   const ap2Inbox = await actor2.inbox.get({});
   assert.equal(ap2Inbox.totalItems, 1);
   assert.equal(ap2Inbox.items[0].id, activity.id);
+  // ap2 replies to that post
+  const reply = deriveActivity({
+    id: createRandomIdentifier(),
+    inReplyTo: activity.id,
+  });
+  await actor2.outbox.post(reply);
 });
