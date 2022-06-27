@@ -66,7 +66,10 @@ export type OutboxPost = {
   };
 };
 
+export const AS2_CONTEXT_VALUE = 'https://www.w3.org/ns/activitystreams'
+
 type Outbox = {
+  '@context': typeof AS2_CONTEXT_VALUE
   name: "outbox";
   status: 200;
   totalItems: number;
@@ -118,6 +121,7 @@ export class OutboxGetHandler<Authorization = unknown>
   }
   protected async outboxResponse(): Promise<Outbox> {
     return {
+      '@context': AS2_CONTEXT_VALUE,
       name: "outbox",
       status: 200 as const,
       totalItems: await this.outboxRepo.count(),
