@@ -3,7 +3,10 @@ import {
   InboxController,
   OutboxController,
 } from "../activitypub-http/controller.js";
-import { InboxPostHandler } from "../activitypub-inbox/inbox.js";
+import {
+  InboxGetHandler,
+  InboxPostHandler,
+} from "../activitypub-inbox/inbox.js";
 import {
   OutboxGetHandler,
   OutboxPostHandler,
@@ -35,10 +38,8 @@ export const createActivityPub = (console: Console): ActivityPubController => {
     return true;
   };
   const inbox: InboxController = {
-    get: async () => {
-      return {
-        totalItems: await repo.count(),
-      };
+    get: async (request) => {
+      return new InboxGetHandler(repo, console).handle(request);
     },
     post: async (request) => {
       return new InboxPostHandler(repo, console).handle(request);

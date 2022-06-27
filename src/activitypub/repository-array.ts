@@ -1,10 +1,14 @@
 export class ArrayRepository<T> {
-  private inboxArray: Array<T> = [];
+  private items: Array<T> = [];
   // constructor() {}
   async push(activity: T): Promise<void> {
-    this.inboxArray.push(activity);
+    this.items.push(activity);
   }
   async count(): Promise<number> {
-    return this.inboxArray.length;
+    return this.items.length;
+  }
+  async read(): Promise<{ items: T[] }> {
+    const items = this.items;
+    return { items };
   }
 }

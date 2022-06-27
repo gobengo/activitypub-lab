@@ -20,10 +20,6 @@ type InboxPostable = {
 
 export type ActivityAudienceTarget = InboxPostable | Identifier;
 
-export type ActivityOverlay = {
-  cc?: Array<InboxPostable | Identifier>;
-};
-
 export type OptionalActivityProperties = {
   cc: ActivityAudienceTarget[];
 };
@@ -34,16 +30,16 @@ export type Activity = {
 
 export const deriveActivity = <T extends Partial<Activity>>(
   base: T,
-  overlay: ActivityOverlay
+  overlay: Partial<Activity>
 ): T & Activity => {
   const activity = {
-    id: base.id ?? createRandomIdentifier(),
     ...base,
+    id: base.id ?? createRandomIdentifier(),
     cc: [...array(base.cc), ...(overlay.cc || [])],
   };
   return activity;
 };
 
-function createRandomIdentifier(): Identifier {
+export function createRandomIdentifier(): Identifier {
   return `urn:uuid:${uuidv4()}`;
 }

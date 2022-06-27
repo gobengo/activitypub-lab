@@ -1,4 +1,5 @@
 import {
+  InboxGetHandler,
   InboxGetRequest,
   InboxGetResponse,
   InboxPostableActivity,
@@ -139,10 +140,11 @@ class _ActivityPubUcanto {
   public get inbox(): InboxUcanto {
     // get inbox
     const get: InboxGetUcantoHandler = async (_invocation) => {
-      const value: InboxGetResponse = {
-        totalItems: await this.getInboxRepository().count(),
-      };
-      return { ok: true, value };
+      const response = await new InboxGetHandler(
+        this.getInboxRepository(),
+        this.console
+      ).handle(_invocation);
+      return { ok: true, value: response };
     };
     // post to inbox
     const post: InboxPostUcantoHandler = async (_invocation) => {

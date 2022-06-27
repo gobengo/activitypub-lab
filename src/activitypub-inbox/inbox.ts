@@ -8,12 +8,13 @@ import { ArrayRepository } from "../activitypub/repository-array.js";
 export type InboxPostableActivity = AnnounceActivityPubCom | Activity;
 
 /** request to GET inbox */
-export type InboxGetRequest = Record<string, unknown>;
+export type InboxGetRequest = unknown;
 
 /** response from GET inbox */
 export type InboxGetResponse = {
   /** total number of items in Inbox */
   totalItems: number;
+  items: Activity[];
 };
 
 export type InboxPostRequest = InboxPostableActivity;
@@ -51,6 +52,22 @@ export class InboxPostHandler implements ServiceMethodHandler<InboxPost> {
     return {
       posted: true as const,
       status: 201 as const,
+    };
+  }
+}
+
+type InboxGet = {
+  Request: InboxGetRequest;
+  Response: InboxGetResponse;
+};
+
+export class InboxGetHandler implements ServiceMethodHandler<InboxGet> {
+  constructor(private repository: InboxRepository, private console: Console) {}
+  async handle(_request: InboxGet["Request"]) {
+    this.console.log("inbox.get", _request);
+    return {
+      ...(await this.repository.read()),
+      totalItems: await this.repository.count(),
     };
   }
 }
