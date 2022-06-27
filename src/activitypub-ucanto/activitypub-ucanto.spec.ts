@@ -3,7 +3,7 @@ import * as assert from "assert";
 import * as Issuer from "../actor/issuer.js";
 import { ActivityPubUcanto } from "./activitypub-ucanto.js";
 import { Agent } from "ucanto/src/api";
-import { createAnnounceActivityPubCom } from "./announcement.js";
+import { createAnnounceActivityPubCom } from "../activitypub/announcement.js";
 
 async function exampleInboxGet(
   activitypub: ReturnType<typeof ActivityPubUcanto>,

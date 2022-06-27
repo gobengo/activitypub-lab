@@ -1,3 +1,5 @@
+import { AnnounceActivityPubCom } from "./announcement.js";
+
 /** ActivityPub inbox */
 export * as inbox from "../activitypub-inbox/inbox.js";
 
@@ -12,3 +14,5 @@ export * as repo from "./repository-array.js";
 
 /** activitypub announcements - e.g. new actors */
 export * as announcement from "./announcement.js";
+
+export type KnownActivitypubActivity = AnnounceActivityPubCom;

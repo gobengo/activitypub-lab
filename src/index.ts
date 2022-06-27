@@ -1,6 +1,9 @@
-import { main } from "./server.js";
 import { fileURLToPath } from "url";
 import process from "process";
+
+const main = async () => {
+  /** @todo make it run an activitypub server */
+}
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
@@ -17,4 +20,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 export * as activitypub from "./activitypub/activitypub.js";
 
 /** ActivityPub implementation using ucanto */
-export * as ActivityPubUcanto from "./activitypub/activitypub-ucanto.js";
+export * as ActivityPubUcanto from "./activitypub-ucanto/activitypub-ucanto.js";

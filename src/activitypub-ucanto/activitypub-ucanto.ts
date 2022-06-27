@@ -7,10 +7,8 @@ import {
 import type { DID } from "@ipld/dag-ucan/src/ucan";
 import type { Result } from "ucanto/src/client";
 import type { Invocation, Link, UCAN } from "ucanto/src/client";
-import { AnnounceActivityPubCom } from "./announcement.js";
-import { ArrayRepository } from "./repository-array.js";
-
-export type KnownActivitypubActivity = AnnounceActivityPubCom;
+import { AnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { ArrayRepository } from "../activitypub/repository-array.js";
 
 export type { DID } from "@ipld/dag-ucan/src/ucan";
 export type { Result } from "ucanto/src/client";
@@ -46,6 +44,7 @@ import {
   OutboxPostableActivity,
   OutboxPostHandler,
 } from "../activitypub-outbox/outbox.js";
+import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
 
 export type Ability = UCAN.Ability;
 export type Resource = UCAN.Resource;

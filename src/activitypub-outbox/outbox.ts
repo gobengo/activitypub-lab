@@ -1,4 +1,4 @@
-import { KnownActivitypubActivity } from "../activitypub/activitypub-ucanto";
+import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
 import { AnnounceActivityPubCom } from "../activitypub/announcement";
 import { ServiceMethodHandler, ServiceMethod } from "../activitypub/handler.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
