@@ -10,7 +10,7 @@ import { hasOwnProperty } from "../object.js";
 import {
   AnnounceActivityPubCom,
   createAnnounceActivityPubCom,
-} from "../activitypub/announcement.js";
+} from "../activitypub.com/announcement.js";
 import { PathReporter } from "io-ts/lib/PathReporter.js";
 
 /**

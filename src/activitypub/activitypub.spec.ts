@@ -5,7 +5,7 @@ import {
 } from "../activity/activity.js";
 import { createActivityPubActor } from "../activitypub-actor/activitypub-actor.js";
 import { createTestConsole, test } from "../test.js";
-import { createAnnounceActivityPubCom } from "./announcement.js";
+import { createAnnounceActivityPubCom } from "../activitypub.com/announcement.js";
 
 test("can federate", async () => {
   const console = createTestConsole();

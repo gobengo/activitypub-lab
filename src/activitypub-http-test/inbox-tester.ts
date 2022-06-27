@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { InboxController } from "../activitypub-http/controller.js";
-import { createAnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { createAnnounceActivityPubCom } from "../activitypub.com/announcement.js";
 
 const testGetInbox = async (get: InboxController["get"]) => {
   const inbox = await get({});

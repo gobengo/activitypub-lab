@@ -1,4 +1,4 @@
-import { createAnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { createAnnounceActivityPubCom } from "../activitypub.com/announcement.js";
 import { test } from "../test.js";
 import { deriveActivity } from "./activity.js";
 import assert from "assert/strict";

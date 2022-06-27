@@ -13,7 +13,7 @@ import {
   OutboxOptions,
 } from "./outbox.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
-import type { AnnounceActivityPubCom } from "../activitypub/announcement";
+import type { AnnounceActivityPubCom } from "../activitypub.com/announcement";
 import { Identifier } from "../activity/activity.js";
 
 const defaultOutboxRepository: OutboxRepository =

@@ -1,6 +1,6 @@
 import { Activity } from "../activity/activity.js";
 import { KnownActivitypubActivity } from "../activitypub/activitypub.js";
-import { AnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { AnnounceActivityPubCom } from "../activitypub.com/announcement.js";
 import { ServiceMethodHandler } from "../activitypub/handler.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 

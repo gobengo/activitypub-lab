@@ -9,7 +9,7 @@ import {
 import type { DID } from "@ipld/dag-ucan/src/ucan";
 import type { Result } from "ucanto/src/client";
 import type { Invocation, Link, UCAN } from "ucanto/src/client";
-import { AnnounceActivityPubCom } from "../activitypub/announcement.js";
+import { AnnounceActivityPubCom } from "../activitypub.com/announcement.js";
 import { ArrayRepository } from "../activitypub/repository-array.js";
 
 export type { DID } from "@ipld/dag-ucan/src/ucan";

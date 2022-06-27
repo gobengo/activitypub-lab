@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as assert from "assert";
 import { DebugLoggerFunction } from "util";
 import { ConsoleLog, DefaultLogger, JSONLogger } from "../log.js";
+import { Identifier } from "../activity/activity.js";
 
 const ajv = new Ajv();
 
@@ -207,7 +208,13 @@ interface OutboxPoster {
 
 function DefaultOutboxPoster(outbox: OutboxRepository): OutboxPoster {
   return async (post) => {
-    const response = await new OutboxPostHandler(outbox).handle(post.object);
+    const response = await new OutboxPostHandler(outbox).handle({
+      ...post.object,
+      /**
+       * @todo - don't use type assertion. Instead, adjust OutboxPostCodec.object to be any kind of Activity including checking id requirements
+       */
+      id: post.object.id as Identifier,
+    });
     return response;
   };
 }
