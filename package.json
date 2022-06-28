@@ -11,7 +11,7 @@
   },
   "scripts": {
     "doc": "npx typedoc src/index.ts --sort visibility --sort static-first --sort alphabetical",
-    "typedoc": "npx typedoc src/index.ts",
+    "typedoc": "typedoc src/index.ts",
     "test": "NODE_ENV=test mocha",
     "tsc": "tsc --declaration",
     "build": "run-s lint tsc",
@@ -46,6 +46,7 @@
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "multiformats": "^9.6.4",
+    "typedoc": "^0.23.2",
     "typera-koa": "^2.4.4",
     "ucanto": "0.1.0-beta",
     "uint8arrays": "^3.0.0",

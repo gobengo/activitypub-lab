@@ -25,10 +25,10 @@ export function MemoryOutboxRepository(): OutboxRepository {
   return repo;
 }
 
-type Iso8601String = string;
-type Uri = string;
-type VerificationMethodUri = Uri;
-type Ed25519Signature2020<ProofPurpose> = {
+export type Iso8601String = string;
+export type Uri = string;
+export type VerificationMethodUri = Uri;
+export type Ed25519Signature2020<ProofPurpose> = {
   type: "Ed25519Signature2020";
   created: Iso8601String;
   verificationMethod: VerificationMethodUri;
@@ -36,11 +36,11 @@ type Ed25519Signature2020<ProofPurpose> = {
   proofValue: string;
   domain?: string;
 };
-type JsonldProved<ProofPurpose> = {
+export type JsonldProved<ProofPurpose> = {
   proof: Ed25519Signature2020<ProofPurpose>;
 };
 
-type CapabilityInvocation<_Request, _Action> = {
+export type CapabilityInvocation<_Request, _Action> = {
   "@context": "https://example.org/zcap/v1";
   /** nonce */
   id: string;
@@ -57,7 +57,7 @@ type CapabilityInvocation<_Request, _Action> = {
 /** type of Activity that can be posted to outbox */
 export type OutboxPostableActivity = AnnounceActivityPubCom | Activity;
 
-type InvokeOutboxPostWithActivity = CapabilityInvocation<
+export type InvokeOutboxPostWithActivity = CapabilityInvocation<
   OutboxPostableActivity,
   OutboxPostableActivity
 >;
@@ -73,14 +73,14 @@ export type OutboxPost = {
 
 export const AS2_CONTEXT_VALUE = "https://www.w3.org/ns/activitystreams";
 
-type Outbox = {
+export type Outbox = {
   "@context": typeof AS2_CONTEXT_VALUE;
   name: "outbox";
   status: 200;
   totalItems: number;
 };
 
-type NotAuthorizedError = {
+export type NotAuthorizedError = {
   name: "NotAuthorizedError";
   status: 401;
 };
@@ -132,7 +132,7 @@ export class OutboxGetHandler<Authorization = unknown>
   }
 }
 
-type DeliveryResult =
+export type DeliveryResult =
   | { delivered: true; target: ActivityDeliveryTarget }
   | { delivered: false; reason: unknown };
 
@@ -150,7 +150,11 @@ const deliverToTarget = async (
   };
 };
 
-type DeliverActivity = (activity: Activity) => Promise<{
+/**
+ * Deliver an activity to the targets should be delivered to according to activitypub s2s.
+ * @returns result of delivery attempts
+ */
+export type DeliverActivity = (activity: Activity) => Promise<{
   deliveries: DeliveryResult[];
 }>;
 

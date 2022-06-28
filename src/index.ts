@@ -11,6 +11,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   });
 }
 
+/** ActivityStreams Activity */
+export * as activity from "./activity/activity.js";
+
 /** ActivityPub protocol */
 export * as activitypub from "./activitypub/activitypub.js";
 
