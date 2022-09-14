@@ -1,8 +1,9 @@
 import { InboxPostFunction } from "../activitypub-inbox/inbox.js";
 import { v4 as uuidv4 } from "uuid";
 
-type UriPrefix = "did" | "urn:uuid";
-type URI = `${UriPrefix}:${string}`;
+export type UriPrefix = "did" | "urn:uuid";
+/** uniform resource indicator */
+export type URI = `${UriPrefix}:${string}`;
 export type Identifier = URI;
 
 export const array = <T>(input: T | T[]): T[] => {
@@ -12,16 +13,17 @@ export const array = <T>(input: T | T[]): T[] => {
   return Array.isArray(input) ? input : [input];
 };
 
-type InboxPostable = {
+export type InboxPostable = {
   inbox: {
     post: InboxPostFunction;
   };
 };
 
+/**  */
 export type ActivityDeliveryTarget = InboxPostable | Identifier;
 
 /** one or more things. item or array of items. */
-type OneOrMore<T> = T | T[];
+export type OneOrMore<T> = T | T[];
 
 export type OptionalActivityProperties = {
   attributedTo: Identifier | InboxPostable;
@@ -29,6 +31,10 @@ export type OptionalActivityProperties = {
   inReplyTo: OneOrMore<Identifier | { attributedTo: InboxPostable }>;
 };
 
+/**
+ * a social activity
+ * matching activitystreams 2.0 schema
+ */
 export type Activity = {
   "@context": "https://www.w3.org/ns/activitystreams";
   id: URI;

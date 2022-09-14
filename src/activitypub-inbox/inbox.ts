@@ -56,7 +56,7 @@ export class InboxPostHandler implements ServiceMethodHandler<InboxPost> {
   }
 }
 
-type InboxGet = {
+export type InboxGet = {
   Request: InboxGetRequest;
   Response: InboxGetResponse;
 };
